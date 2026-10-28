@@ -11,6 +11,8 @@ ARG TARGETPLATFORM
 ARG BUILD_VERSION
 ARG BUILD_COMMIT
 ARG BUILD_DATE
+# 1 trusts the test CA (CI only); production images must not trust it
+ARG TEST_CA=0
 
 # See: https://github.com/just-containers/s6-overlay/blob/master/README.md
 ENV SUPPRESS_NO_CONFIG_WARNING=1 \
@@ -41,10 +43,16 @@ COPY backend       /app
 COPY frontend/dist /app/frontend
 COPY docker/rootfs /
 
-# Copy test CA cert for use in container and add to trusted certs from a self-signed CA
-COPY --from=testca /home/step/certs/root_ca.crt /etc/ssl/certs/NginxProxyManager.crt
+# Copy test CA cert for use in container and add to trusted certs from a self-signed CA, only with TEST_CA=1
+COPY --from=testca /home/step/certs/root_ca.crt /tmp/NginxProxyManager.crt
 WORKDIR /etc/ssl/certs
-RUN ln -s NginxProxyManager.crt 1d0e3f10.0 && update-ca-certificates
+RUN if [ "$TEST_CA" = 1 ]; then \
+		mv /tmp/NginxProxyManager.crt NginxProxyManager.crt \
+		&& ln -s NginxProxyManager.crt 1d0e3f10.0 \
+		&& update-ca-certificates; \
+	else \
+		rm -f /tmp/NginxProxyManager.crt; \
+	fi
 
 WORKDIR /app
 RUN yarn install --frozen-lockfile \

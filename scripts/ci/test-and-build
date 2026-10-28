@@ -26,5 +26,6 @@ docker build --pull --no-cache --compress \
 	--build-arg BUILD_VERSION="${BUILD_VERSION:-unknown}" \
 	--build-arg BUILD_COMMIT="${BUILD_COMMIT:-unknown}" \
 	--build-arg BUILD_DATE="$(date '+%Y-%m-%d %T %Z')" \
+	--build-arg TEST_CA=1 \
 	.
 echo -e "${BLUE}❯ ${GREEN}Building Complete${RESET}"
