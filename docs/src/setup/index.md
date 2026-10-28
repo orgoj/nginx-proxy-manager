@@ -18,6 +18,7 @@ services:
       # These ports are in format <host-port>:<container-port>
       - '80:80' # Public HTTP Port
       - '443:443' # Public HTTPS Port
+      - '443:443/udp' # Public HTTP/3 (QUIC) Port
       - '81:81' # Admin Web Port
       # Add any other Stream port you want to expose
       # - '21:21' # FTP
@@ -61,6 +62,7 @@ services:
       # These ports are in format <host-port>:<container-port>
       - '80:80' # Public HTTP Port
       - '443:443' # Public HTTPS Port
+      - '443:443/udp' # Public HTTP/3 (QUIC) Port
       - '81:81' # Admin Web Port
       # Add any other Stream port you want to expose
       # - '21:21' # FTP
@@ -124,6 +126,7 @@ services:
       # These ports are in format <host-port>:<container-port>
       - '80:80' # Public HTTP Port
       - '443:443' # Public HTTPS Port
+      - '443:443/udp' # Public HTTP/3 (QUIC) Port
       - '81:81' # Admin Web Port
       # Add any other Stream port you want to expose
       # - '21:21' # FTP

@@ -67,6 +67,7 @@ services:
       - '80:80'
       - '81:81'
       - '443:443'
+      - '443:443/udp'
     volumes:
       - ./data:/data
       - ./letsencrypt:/etc/letsencrypt

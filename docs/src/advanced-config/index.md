@@ -108,6 +108,7 @@ services:
       - '80:80'
       # Public HTTPS Port:
       - '443:443'
+      - '443:443/udp'
       # Admin Web Port:
       - '81:81'
     environment:
