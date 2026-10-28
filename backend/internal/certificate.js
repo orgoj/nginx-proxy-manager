@@ -622,7 +622,7 @@ const internalCertificate = {
 
 		certificate.meta = row.meta;
 		await internalCertificate.writeCustomCert(certificate);
-		return _.pick(row.meta, internalCertificate.allowedSslFiles);
+		return _.pick(row.meta, ["certificate", "intermediate_certificate"]);
 	},
 
 	/**

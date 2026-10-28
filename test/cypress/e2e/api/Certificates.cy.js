@@ -60,7 +60,7 @@ describe('Certificates endpoints', () => {
 			}).then((data) => {
 				cy.validateSwaggerSchema('post', 200, '/nginx/certificates/{certID}/upload', data);
 				expect(data).to.have.property('certificate');
-				expect(data).to.have.property('certificate_key');
+				expect(data).to.not.have.property('certificate_key');
 
 				// Get all certs
 				cy.task('backendApiGet', {
