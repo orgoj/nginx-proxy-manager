@@ -47,7 +47,7 @@ WORKDIR /etc/ssl/certs
 RUN ln -s NginxProxyManager.crt 1d0e3f10.0 && update-ca-certificates
 
 WORKDIR /app
-RUN yarn install \
+RUN yarn install --frozen-lockfile \
 	&& yarn cache clean
 
 # Remove frontend service not required for prod, dev nginx config as well
