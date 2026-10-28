@@ -22,6 +22,7 @@ mkdir -p \
 	/data/access \
 	/data/nginx/default_host \
 	/data/nginx/default_www \
+	/data/nginx/error_pages \
 	/data/nginx/proxy_host \
 	/data/nginx/redirection_host \
 	/data/nginx/stream \

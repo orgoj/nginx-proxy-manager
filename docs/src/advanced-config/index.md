@@ -192,6 +192,22 @@ You can add your custom configuration snippet files at `/data/nginx/custom` as f
 
 Every file is optional.
 
+## Custom Error Pages
+
+All proxy, redirection and 404 hosts and the default site share one set of error pages for
+errors that Nginx itself generates (400, 401, 403, 404, 405, 408, 413, 414, 429, 500, 502, 503, 504),
+for example when a backend is down or an access list denies the request. Errors returned by
+a backend are passed through unchanged.
+
+Place your own pages in `/data/nginx/error_pages`; no restart or rebuild is needed:
+
+ - `/data/nginx/error_pages/<status>.html` (e.g. `502.html`): used for that status
+ - `/data/nginx/error_pages/error.html`: used for every status without its own page
+
+Pages are processed with [SSI](https://nginx.org/en/docs/http/ngx_http_ssi_module.html),
+so `<!--# echo var="status" -->` prints the status code. An `error_page` directive in a host's
+advanced configuration or in a `server_*.conf` snippet takes precedence for its status codes.
+
 
 ## X-FRAME-OPTIONS Header
 
