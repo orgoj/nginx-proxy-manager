@@ -4,6 +4,7 @@ import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import _ from "lodash";
 import errs from "../lib/error.js";
+import withNginxLock from "../lib/nginx-lock.js";
 import utils from "../lib/utils.js";
 import { debug, nginx as logger } from "../logger.js";
 import accessListModel from "../models/access_list.js";
@@ -26,7 +27,7 @@ const internalNginx = {
 	 * @param   {Object}         host
 	 * @returns {Promise}
 	 */
-	configure: (model, host_type, host) => {
+	configure: (model, host_type, host) => withNginxLock(() => {
 		let combined_meta = {};
 
 		return internalNginx
@@ -100,7 +101,7 @@ const internalNginx = {
 			.then(() => {
 				return combined_meta;
 			});
-	},
+	}),
 
 	/**
 	 * @returns {Promise}

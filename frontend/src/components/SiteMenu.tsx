@@ -1,6 +1,7 @@
 import {
 	IconBook,
 	IconDeviceDesktop,
+	IconFileCode,
 	IconFileText,
 	IconHome,
 	IconLock,
@@ -100,6 +101,12 @@ const menuItems: MenuItem[] = [
 		to: "/logs",
 		icon: IconFileText,
 		label: "logs",
+		permissionSection: ADMIN,
+	},
+	{
+		to: "/custom-files",
+		icon: IconFileCode,
+		label: "custom-files",
 		permissionSection: ADMIN,
 	},
 	{

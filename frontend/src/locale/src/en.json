@@ -332,6 +332,24 @@
 	"created-on": {
 		"defaultMessage": "Created: {date}"
 	},
+	"custom-files": {
+		"defaultMessage": "Custom Files"
+	},
+	"custom-files.delete-confirm": {
+		"defaultMessage": "Delete {name}?"
+	},
+	"custom-files.empty": {
+		"defaultMessage": "No files"
+	},
+	"custom-files.modified": {
+		"defaultMessage": "Modified"
+	},
+	"custom-files.saved": {
+		"defaultMessage": "Saved and applied"
+	},
+	"custom-files.size": {
+		"defaultMessage": "Size"
+	},
 	"dashboard": {
 		"defaultMessage": "Dashboard"
 	},

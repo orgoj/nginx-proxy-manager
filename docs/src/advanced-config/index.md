@@ -239,8 +239,9 @@ For reference, the default configuration can be found [here](https://github.com/
 
 Every `*.conf` file in `/data/logrotate.d/` is rotated once a day at `LOGROTATE_TIME`
 (`HH:MM`, default `00:05`) in the container time zone (`TZ`, default UTC), with state in
-`/data/logrotate/status`. logrotate runs as root here, so the files must be owned by root
-and not group- or world-writable. A group in `create` must exist in the container; to keep
+`/data/logrotate/status`. logrotate runs as root here, or as `PUID:PGID` when `PUID` is set
+(then `postrotate` scripts cannot signal nginx; use `copytruncate`), so the files must be
+owned by root or that user and not group- or world-writable. A group in `create` must exist in the container; to keep
 a host group, give the log directory that group and mode `2755` (setgid, not group-writable,
 or logrotate skips it) and use `create <mode>` without owner.
 
@@ -249,6 +250,15 @@ or logrotate skips it) and use `create <mode>` without owner.
       TZ: 'Europe/Prague'
       LOGROTATE_TIME: '00:05'
 ```
+
+## Editing custom files in the admin UI
+
+Administrators can list, create, edit and delete the `*.conf` files in `/data/nginx/custom/`
+and `/data/logrotate.d/` on the **Custom Files** page. Saving or deleting an nginx file runs
+`nginx -t`; on failure the previous file is restored and the error is shown, otherwise nginx
+reloads. A logrotate file is checked with `logrotate -d` (errors and warnings refuse it) and
+written with mode `0644`. Only the fixed names above are loaded by nginx; include other files
+from them yourself.
 
 ## Only custom access logs
 

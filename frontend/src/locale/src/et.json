@@ -332,6 +332,24 @@
 	"created-on": {
 		"defaultMessage": "Loodud: {date}"
 	},
+	"custom-files": {
+		"defaultMessage": "Kohandatud failid"
+	},
+	"custom-files.delete-confirm": {
+		"defaultMessage": "Kas kustutada {name}?"
+	},
+	"custom-files.empty": {
+		"defaultMessage": "Faile pole"
+	},
+	"custom-files.modified": {
+		"defaultMessage": "Muudetud"
+	},
+	"custom-files.saved": {
+		"defaultMessage": "Salvestatud ja rakendatud"
+	},
+	"custom-files.size": {
+		"defaultMessage": "Suurus"
+	},
 	"dashboard": {
 		"defaultMessage": "Töölaud"
 	},

@@ -3,9 +3,11 @@
 
 # Rotates the user-provided logrotate configs in /data/logrotate.d once a day
 # at LOGROTATE_TIME (HH:MM, default 00:05) in the container's TZ. Runs as
-# root, so config files must be owned by root and not group/world writable.
-# State lives in /data/logrotate/status and survives container recreation.
-# NPM's own logs are still rotated by the backend (setup.js).
+# root, or as PUID:PGID when PUID is set (like the backend, which writes these
+# files from the admin UI), so no privileged step touches the PUID-writable
+# /data. Config files must be owned by root or that user and not group/world
+# writable. State lives in /data/logrotate/status and survives container
+# recreation. NPM's own logs are still rotated by the backend (setup.js).
 
 set -e
 
@@ -14,18 +16,22 @@ set -e
 CONF_DIR=/data/logrotate.d
 STATE=/data/logrotate/status
 LOGROTATE_TIME="${LOGROTATE_TIME:-00:05}"
+RUNAS=()
+if [ "$PUID" != '0' ]; then
+	RUNAS=(s6-setuidgid "$PUID:$PGID")
+fi
 
 if ! [[ "$LOGROTATE_TIME" =~ ^([01][0-9]|2[0-3]):[0-5][0-9]$ ]]; then
 	echo "WARNING: LOGROTATE_TIME must be HH:MM. Defaulting to 00:05" >&2
 	LOGROTATE_TIME=00:05
 fi
 
-mkdir -p "$CONF_DIR" /data/logrotate
+"${RUNAS[@]}" mkdir -p "$CONF_DIR" /data/logrotate
 # logrotate skips its state lock when the state file is world-readable
 umask 077
-chmod -f 0600 "$STATE" || true
+"${RUNAS[@]}" chmod -f 0600 "$STATE" || true
 
-log_info "Custom logrotate daily at ${LOGROTATE_TIME} (TZ=${TZ:-UTC}) ..."
+log_info "Custom logrotate daily at ${LOGROTATE_TIME} (TZ=${TZ:-UTC}) as uid ${PUID} ..."
 
 while :
 do
@@ -37,7 +43,7 @@ do
 	sleep "$((NEXT - NOW))"
 
 	if compgen -G "${CONF_DIR}/*.conf" > /dev/null; then
-		logrotate -s "$STATE" "$CONF_DIR"/*.conf || log_error 'Custom logrotate failed'
+		"${RUNAS[@]}" logrotate -s "$STATE" "$CONF_DIR"/*.conf || log_error 'Custom logrotate failed'
 	fi
 	# never run twice within the same minute
 	sleep 61
