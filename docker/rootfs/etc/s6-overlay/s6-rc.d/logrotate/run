@@ -1,0 +1,44 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+
+# Rotates the user-provided logrotate configs in /data/logrotate.d once a day
+# at LOGROTATE_TIME (HH:MM, default 00:05) in the container's TZ. Runs as
+# root, so config files must be owned by root and not group/world writable.
+# State lives in /data/logrotate/status and survives container recreation.
+# NPM's own logs are still rotated by the backend (setup.js).
+
+set -e
+
+. /usr/bin/common.sh
+
+CONF_DIR=/data/logrotate.d
+STATE=/data/logrotate/status
+LOGROTATE_TIME="${LOGROTATE_TIME:-00:05}"
+
+if ! [[ "$LOGROTATE_TIME" =~ ^([01][0-9]|2[0-3]):[0-5][0-9]$ ]]; then
+	echo "WARNING: LOGROTATE_TIME must be HH:MM. Defaulting to 00:05" >&2
+	LOGROTATE_TIME=00:05
+fi
+
+mkdir -p "$CONF_DIR" /data/logrotate
+# logrotate skips its state lock when the state file is world-readable
+umask 077
+chmod -f 0600 "$STATE" || true
+
+log_info "Custom logrotate daily at ${LOGROTATE_TIME} (TZ=${TZ:-UTC}) ..."
+
+while :
+do
+	NOW="$(date +%s)"
+	NEXT="$(date -d "today ${LOGROTATE_TIME}" +%s)"
+	if [ "$NEXT" -le "$NOW" ]; then
+		NEXT="$(date -d "tomorrow ${LOGROTATE_TIME}" +%s)"
+	fi
+	sleep "$((NEXT - NOW))"
+
+	if compgen -G "${CONF_DIR}/*.conf" > /dev/null; then
+		logrotate -s "$STATE" "$CONF_DIR"/*.conf || log_error 'Custom logrotate failed'
+	fi
+	# never run twice within the same minute
+	sleep 61
+done

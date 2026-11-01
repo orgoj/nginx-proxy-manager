@@ -235,6 +235,33 @@ You can customise the logrotate configuration through a mount (if your custom co
 
 For reference, the default configuration can be found [here](https://github.com/NginxProxyManager/nginx-proxy-manager/blob/develop/docker/rootfs/etc/logrotate.d/nginx-proxy-manager).
 
+### Scheduled rotation of your own logs
+
+Every `*.conf` file in `/data/logrotate.d/` is rotated once a day at `LOGROTATE_TIME`
+(`HH:MM`, default `00:05`) in the container time zone (`TZ`, default UTC), with state in
+`/data/logrotate/status`. logrotate runs as root here, so the files must be owned by root
+and not group- or world-writable. A group in `create` must exist in the container; to keep
+a host group, give the log directory that group and mode `2755` (setgid, not group-writable,
+or logrotate skips it) and use `create <mode>` without owner.
+
+```yml
+    environment:
+      TZ: 'Europe/Prague'
+      LOGROTATE_TIME: '00:05'
+```
+
+## Only custom access logs
+
+With `DISABLE_ACCESS_LOG` set, NPM writes no access logs of its own (http, stream, hosts,
+default and fallback servers, and asset locations no longer switch logging off). Define your
+own `access_log` in `/data/nginx/custom/http_top.conf` and every host inherits it. Error logs
+and the admin UI are unchanged. Existing host configs follow the setting on every start.
+
+```yml
+    environment:
+      DISABLE_ACCESS_LOG: 'true'
+```
+
 ## Enabling the geoip2 module
 
 To enable the geoip2 module, you can create the custom configuration file `/data/nginx/custom/root_top.conf` and include the following snippet:

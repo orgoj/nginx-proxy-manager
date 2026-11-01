@@ -279,7 +279,8 @@ const internalNginx = {
 			locationsPromise.then(() => {
 				renderEngine
 					.parseAndRender(template, host)
-					.then((config_text) => {
+					.then((rendered) => {
+						const config_text = internalNginx.applyAccessLogSetting(rendered);
 						fs.writeFileSync(filename, config_text, { encoding: "utf8" });
 						debug(logger, "Wrote config:", filename, config_text);
 
@@ -326,7 +327,8 @@ const internalNginx = {
 
 			renderEngine
 				.parseAndRender(template, certificate)
-				.then((config_text) => {
+				.then((rendered) => {
+					const config_text = internalNginx.applyAccessLogSetting(rendered);
 					fs.writeFileSync(filename, config_text, { encoding: "utf8" });
 					debug(logger, "Wrote config:", filename, config_text);
 					resolve(true);
@@ -469,6 +471,22 @@ const internalNginx = {
 		}
 
 		return true;
+	},
+
+	/**
+	 * With DISABLE_ACCESS_LOG set, comment out every NPM access_log (to /data/logs,
+	 * and `access_log off`) so only an access_log from /data/nginx/custom applies.
+	 * Same rule and marker as docker/rootfs/etc/s6-overlay/s6-rc.d/prepare/55-access-log.sh.
+	 *
+	 * @param   {string}  config
+	 * @returns {string}
+	 */
+	applyAccessLogSetting: (config) => {
+		const value = (process.env.DISABLE_ACCESS_LOG || "").toLowerCase();
+		if (!["on", "true", "1", "yes"].includes(value)) {
+			return config;
+		}
+		return config.replace(/^(\s*)(access_log\s+(\/data\/logs\/|off;))/gm, "$1#DISABLE_ACCESS_LOG# $2");
 	},
 };
 
