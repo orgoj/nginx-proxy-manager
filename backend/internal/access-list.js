@@ -2,6 +2,7 @@ import fs from "node:fs";
 import batchflow from "batchflow";
 import _ from "lodash";
 import errs from "../lib/error.js";
+import { assertLocal } from "../lib/origin.js";
 import { isMysql, isPostgres } from "../lib/config.js";
 import utils from "../lib/utils.js";
 import db from "../db.js";
@@ -132,6 +133,7 @@ const internalAccessList = {
 	 */
 	update: async (access, data) => {
 		await access.can("access_lists:update", data.id);
+		await assertLocal(accessListModel, data.id);
 		const row = await internalAccessList.get(access, { id: data.id });
 		if (row.id !== data.id) {
 			// Sanity check that something crazy hasn't happened
@@ -300,6 +302,7 @@ const internalAccessList = {
 	 */
 	delete: async (access, data) => {
 		await access.can("access_lists:delete", data.id);
+		await assertLocal(accessListModel, data.id);
 		const row = await internalAccessList.get(access, {
 			id: data.id,
 			expand: ["proxy_hosts", "items", "clients"],

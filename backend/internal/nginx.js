@@ -28,7 +28,11 @@ const internalNginx = {
 	 * @param   {Object}         host
 	 * @returns {Promise}
 	 */
-	configure: (model, host_type, host) => withNginxLock(() => {
+	configure: (model, host_type, host) => withNginxLock(() => internalNginx.configureUnlocked(model, host_type, host)),
+
+	// The body of configure, for callers that already hold the nginx lock (peer import);
+	// skipReload leaves the one reload of a batch to the caller
+	configureUnlocked: (model, host_type, host, skipReload = false) => {
 		let combined_meta = {};
 
 		return internalNginx
@@ -97,12 +101,12 @@ const internalNginx = {
 					});
 			})
 			.then(() => {
-				return internalNginx.reload();
+				return skipReload ? null : internalNginx.reload();
 			})
 			.then(() => {
 				return combined_meta;
 			});
-	}),
+	},
 
 	/**
 	 * @returns {Promise}

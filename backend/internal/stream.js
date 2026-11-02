@@ -1,5 +1,6 @@
 import _ from "lodash";
 import errs from "../lib/error.js";
+import { assertLocalRefs } from "../lib/origin.js";
 import { castJsonIfNeed } from "../lib/helpers.js";
 import utils from "../lib/utils.js";
 import streamModel from "../models/stream.js";
@@ -27,6 +28,7 @@ const internalStream = {
 
 		return access
 			.can("streams:create", data)
+			.then(() => assertLocalRefs(data))
 			.then((/*access_data*/) => {
 				// TODO: At this point the existing ports should have been checked
 				data.owner_user_id = access.token.getUserId(1);
@@ -102,6 +104,7 @@ const internalStream = {
 
 		return access
 			.can("streams:update", thisData.id)
+			.then(() => assertLocalRefs(thisData))
 			.then((/*access_data*/) => {
 				// TODO: at this point the existing streams should have been checked
 				return internalStream.get(access, { id: thisData.id });

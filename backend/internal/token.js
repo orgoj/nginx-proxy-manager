@@ -11,6 +11,21 @@ const ERROR_MESSAGE_INVALID_AUTH_I18N = "error.invalid-auth";
 const ERROR_MESSAGE_INVALID_2FA = "Invalid verification code";
 const ERROR_MESSAGE_INVALID_2FA_I18N = "error.invalid-2fa";
 
+// Accounts with the role `peer` (peer NPM import) or `site_agent` (POST /api/sites) only ever
+// get a token with that scope, on every issue path (orgoj fork, multi-NPM sync)
+const forcedScope = (user) => ["peer", "site_agent"].find((role) => user?.roles?.includes(role)) || null;
+
+const applyForcedScope = (user, requested) => {
+	const forced = forcedScope(user);
+	if (!forced) {
+		return requested;
+	}
+	if (requested && requested !== forced) {
+		throw new errs.PermissionError(`Scope ${requested} is not allowed for this account`);
+	}
+	return forced;
+};
+
 export default {
 	/**
 	 * @param   {Object} data
@@ -24,6 +39,7 @@ export default {
 	getTokenFromEmail: async (data, issuer) => {
 		const Token = TokenModel();
 
+		const requestedScope = data.scope;
 		data.scope = data.scope || "user";
 		data.expiry = data.expiry || "1d";
 
@@ -48,6 +64,8 @@ export default {
 		if (!valid) {
 			throw new errs.AuthError(ERROR_MESSAGE_INVALID_AUTH, ERROR_MESSAGE_INVALID_AUTH_I18N);
 		}
+
+		data.scope = applyForcedScope(user, requestedScope) || data.scope;
 
 		if (data.scope !== "user" && _.indexOf(user.roles, data.scope) === -1) {
 			// The scope requested doesn't exist as a role against the user,
@@ -121,7 +139,10 @@ export default {
 
 			// Only admins can request otherwise scoped tokens
 			let scope = access.token.get("scope");
-			if (thisData.scope && access.token.hasScope("admin")) {
+			const user = await userModel.query().where("id", token_attrs.id).first();
+			if (forcedScope(user)) {
+				scope = [applyForcedScope(user, thisData.scope)];
+			} else if (thisData.scope && access.token.hasScope("admin")) {
 				scope = [thisData.scope];
 
 				if (thisData.scope === "job-board" || thisData.scope === "worker") {
@@ -185,12 +206,13 @@ export default {
 			throw new errs.AuthError(`Invalid expiry time: ${tokenExpiry}`);
 		}
 
+		const user = await userModel.query().where("id", userId).first();
 		const signed = await Token.create({
 			iss: "api",
 			attrs: {
 				id: userId,
 			},
-			scope: ["user"],
+			scope: [forcedScope(user) || "user"],
 			expiresIn: tokenExpiry,
 		});
 
@@ -214,7 +236,7 @@ export default {
 			attrs: {
 				id: user.id,
 			},
-			scope: ["user"],
+			scope: [forcedScope(user) || "user"],
 			expiresIn: expire,
 		});
 

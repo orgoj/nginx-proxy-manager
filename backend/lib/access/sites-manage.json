@@ -1,0 +1,8 @@
+{
+	"type": "object",
+	"required": ["scope", "roles"],
+	"properties": {
+		"scope": { "type": "array", "contains": { "const": "site_agent" } },
+		"roles": { "type": "array", "contains": { "const": "site_agent" } }
+	}
+}

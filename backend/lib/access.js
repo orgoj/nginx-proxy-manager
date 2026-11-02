@@ -78,7 +78,10 @@ export default function (tokenString) {
 					}
 				});
 
-				if (!ok) {
+				// An account flagged `peer` or `site_agent` works only with that scope, also with a
+				// token issued before the flag was set (orgoj fork, multi-NPM sync)
+				const flag = ["peer", "site_agent"].find((role) => user.roles.includes(role));
+				if (!ok || (flag && !tokenData.scope?.includes(flag))) {
 					throw new errs.AuthError("Invalid token scope for User");
 				}
 

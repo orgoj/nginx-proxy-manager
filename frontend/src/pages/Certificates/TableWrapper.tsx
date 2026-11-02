@@ -1,7 +1,7 @@
 import { IconHelp, IconSearch } from "@tabler/icons-react";
 import { useState } from "react";
 import Alert from "react-bootstrap/Alert";
-import { deleteCertificate, downloadCertificate } from "src/api/backend";
+import { deleteCertificate } from "src/api/backend";
 import { Button, HasPermission, LoadingPage } from "src/components";
 import { useCertificates } from "src/hooks";
 import { T } from "src/locale";
@@ -14,7 +14,7 @@ import {
 	showRenewCertificateModal,
 } from "src/modals";
 import { CERTIFICATES, MANAGE } from "src/modules/Permissions";
-import { showError, showObjectSuccess } from "src/notifications";
+import { showObjectSuccess } from "src/notifications";
 import Table from "./Table";
 
 export default function TableWrapper() {
@@ -38,14 +38,6 @@ export default function TableWrapper() {
 	const handleDelete = async (id: number) => {
 		await deleteCertificate(id);
 		showObjectSuccess("certificate", "deleted");
-	};
-
-	const handleDownload = async (id: number) => {
-		try {
-			await downloadCertificate(id);
-		} catch (err: any) {
-			showError(err.message);
-		}
 	};
 
 	let filtered = null;
@@ -145,7 +137,6 @@ export default function TableWrapper() {
 					isFiltered={!!search}
 					isFetching={isFetching}
 					onRenew={showRenewCertificateModal}
-					onDownload={handleDownload}
 					onDelete={(id: number) =>
 						showDeleteConfirmModal({
 							title: <T id="object.delete" tData={{ object: "certificate" }} />,

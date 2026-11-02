@@ -1,5 +1,6 @@
 import _ from "lodash";
 import errs from "../lib/error.js";
+import { assertLocal, assertLocalRefs } from "../lib/origin.js";
 import { castJsonIfNeed } from "../lib/helpers.js";
 import utils from "../lib/utils.js";
 import deadHostModel from "../models/dead_host.js";
@@ -26,6 +27,7 @@ const internalDeadHost = {
 		}
 
 		await access.can("dead_hosts:create", data);
+		await assertLocalRefs(data);
 
 		// Get a list of the domain names and check each of them against existing records
 		const domainNameCheckPromises = [];
@@ -104,6 +106,8 @@ const internalDeadHost = {
 		}
 
 		await access.can("dead_hosts:update", data.id);
+		await assertLocal(deadHostModel, data.id);
+		await assertLocalRefs(data);
 
 		// Get a list of the domain names and check each of them against existing records
 		const domainNameCheckPromises = [];
@@ -222,6 +226,7 @@ const internalDeadHost = {
 	 */
 	delete: async (access, data) => {
 		await access.can("dead_hosts:delete", data.id);
+		await assertLocal(deadHostModel, data.id);
 		const row = await internalDeadHost.get(access, { id: data.id });
 		if (!row?.id) {
 			throw new errs.ItemNotFoundError(data.id);
@@ -254,6 +259,7 @@ const internalDeadHost = {
 	 */
 	enable: async (access, data) => {
 		await access.can("dead_hosts:update", data.id);
+		await assertLocal(deadHostModel, data.id);
 		const row = await internalDeadHost.get(access, {
 			id: data.id,
 			expand: ["certificate", "owner"],
@@ -293,6 +299,7 @@ const internalDeadHost = {
 	 */
 	disable: async (access, data) => {
 		await access.can("dead_hosts:update", data.id);
+		await assertLocal(deadHostModel, data.id);
 		const row = await internalDeadHost.get(access, { id: data.id });
 		if (!row?.id) {
 			throw new errs.ItemNotFoundError(data.id);

@@ -1,0 +1,8 @@
+{
+	"type": "object",
+	"required": ["scope", "roles"],
+	"properties": {
+		"scope": { "type": "array", "contains": { "const": "peer" } },
+		"roles": { "type": "array", "contains": { "const": "peer" } }
+	}
+}

@@ -2,6 +2,7 @@ import express from "express";
 import { isCI } from "../lib/config.js";
 import errs from "../lib/error.js";
 import logRequest from "../lib/express/log-request.js";
+import TokenModel from "../models/token.js";
 import pjson from "../package.json" with { type: "json" };
 import { isSetup } from "../setup.js";
 import auditLogRoutes from "./audit-log.js";
@@ -12,7 +13,10 @@ import accessListsRoutes from "./nginx/access_lists.js";
 import certificatesHostsRoutes from "./nginx/certificates.js";
 import deadHostsRoutes from "./nginx/dead_hosts.js";
 import proxyHostsRoutes from "./nginx/proxy_hosts.js";
+import peerExportRoutes from "./nginx/peer_export.js";
 import redirectionHostsRoutes from "./nginx/redirection_hosts.js";
+import peersRoutes from "./peers.js";
+import sitesRoutes from "./sites.js";
 import streamsRoutes from "./nginx/streams.js";
 import reportsRoutes from "./reports.js";
 import schemaRoutes from "./schema.js";
@@ -28,6 +32,26 @@ const router = express.Router({
 });
 
 router.use(logRequest);
+
+// Tokens with scope `peer` or `site_agent` work only on their own endpoints (orgoj fork, multi-NPM sync)
+const scopeRoutes = {
+	peer: (req) => req.path === "/nginx/peer-export" && req.method === "GET",
+	site_agent: (req) => req.path === "/sites" || req.path === "/sites/",
+};
+router.use(async (req, res, next) => {
+	let scope = [];
+	try {
+		scope = res.locals.token ? (await TokenModel().load(res.locals.token)).scope || [] : [];
+	} catch {
+		// an invalid token fails in the route itself
+	}
+	for (const [name, allowed] of Object.entries(scopeRoutes)) {
+		if (scope.includes(name) && !allowed(req) && !(req.path === "/tokens" && req.method === "GET")) {
+			return next(new errs.PermissionError("Permission Denied"));
+		}
+	}
+	next();
+});
 
 /**
  * Health Check
@@ -63,6 +87,9 @@ router.use("/nginx/dead-hosts", deadHostsRoutes);
 router.use("/nginx/streams", streamsRoutes);
 router.use("/nginx/access-lists", accessListsRoutes);
 router.use("/nginx/certificates", certificatesHostsRoutes);
+router.use("/nginx/peer-export", peerExportRoutes);
+router.use("/peers", peersRoutes);
+router.use("/sites", sitesRoutes);
 
 // Only include CI routes if we're in a CI environment
 if (isCI()) {

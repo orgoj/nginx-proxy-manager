@@ -301,33 +301,4 @@ router
 		}
 	});
 
-/**
- * Download LE Certs
- *
- * /api/nginx/certificates/123/download
- */
-router
-	.route("/:certificate_id/download")
-	.options((_req, res) => {
-		res.sendStatus(204);
-	})
-	.all(jwtdecode())
-
-	/**
-	 * GET /api/nginx/certificates/123/download
-	 *
-	 * Renew certificate
-	 */
-	.get(async (req, res, next) => {
-		try {
-			const result = await internalCertificate.download(res.locals.access, {
-				id: Number.parseInt(req.params.certificate_id, 10),
-			});
-			res.status(200).download(result.fileName);
-		} catch (err) {
-			debug(logger, `${req.method.toUpperCase()} ${req.path}: ${err}`);
-			next(err);
-		}
-	});
-
 export default router;

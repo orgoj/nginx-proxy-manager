@@ -1,5 +1,6 @@
 import _ from "lodash";
 import errs from "../lib/error.js";
+import { assertLocal, assertLocalRefs } from "../lib/origin.js";
 import { castJsonIfNeed } from "../lib/helpers.js";
 import utils from "../lib/utils.js";
 import proxyHostModel from "../models/proxy_host.js";
@@ -28,6 +29,7 @@ const internalProxyHost = {
 
 		return access
 			.can("proxy_hosts:create", thisData)
+			.then(() => assertLocalRefs(thisData))
 			.then(() => {
 				// Get a list of the domain names and check each of them against existing records
 				const domain_name_check_promises = [];
@@ -123,6 +125,8 @@ const internalProxyHost = {
 
 		return access
 			.can("proxy_hosts:update", thisData.id)
+			.then(() => assertLocal(proxyHostModel, thisData.id))
+			.then(() => assertLocalRefs(thisData))
 			.then((/*access_data*/) => {
 				// Get a list of the domain names and check each of them against existing records
 				const domain_name_check_promises = [];
@@ -275,6 +279,7 @@ const internalProxyHost = {
 	delete: (access, data) => {
 		return access
 			.can("proxy_hosts:delete", data.id)
+			.then(() => assertLocal(proxyHostModel, data.id))
 			.then(() => {
 				return internalProxyHost.get(access, { id: data.id });
 			})
@@ -320,6 +325,7 @@ const internalProxyHost = {
 	enable: (access, data) => {
 		return access
 			.can("proxy_hosts:update", data.id)
+			.then(() => assertLocal(proxyHostModel, data.id))
 			.then(() => {
 				return internalProxyHost.get(access, {
 					id: data.id,
@@ -368,6 +374,7 @@ const internalProxyHost = {
 	disable: (access, data) => {
 		return access
 			.can("proxy_hosts:update", data.id)
+			.then(() => assertLocal(proxyHostModel, data.id))
 			.then(() => {
 				return internalProxyHost.get(access, { id: data.id });
 			})

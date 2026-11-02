@@ -1,7 +1,5 @@
 import fs from "node:fs";
 import https from "node:https";
-import path from "path";
-import { ZipArchive } from "archiver";
 import _ from "lodash";
 import moment from "moment";
 import { ProxyAgent } from "proxy-agent";
@@ -10,8 +8,9 @@ import dnsPlugins from "../certbot/dns-plugins.json" with { type: "json" };
 import { installPlugin } from "../lib/certbot.js";
 import { useLetsencryptServer, useLetsencryptStaging } from "../lib/config.js";
 import error from "../lib/error.js";
+import { assertLocal } from "../lib/origin.js";
 import utils from "../lib/utils.js";
-import { debug, ssl as logger } from "../logger.js";
+import { ssl as logger } from "../logger.js";
 import certificateModel from "../models/certificate.js";
 import tokenModel from "../models/token.js";
 import userModel from "../models/user.js";
@@ -246,6 +245,7 @@ const internalCertificate = {
 	 */
 	update: async (access, data) => {
 		await access.can("certificates:update", data.id);
+		await assertLocal(certificateModel, data.id);
 		const row = await internalCertificate.get(access, { id: data.id });
 
 		if (row.id !== data.id) {
@@ -333,60 +333,6 @@ const internalCertificate = {
 	},
 
 	/**
-	 * @param   {Access}  access
-	 * @param   {Object}  data
-	 * @param   {Number}  data.id
-	 * @returns {Promise}
-	 */
-	download: async (access, data) => {
-		await access.can("certificates:get", data);
-		const certificate = await internalCertificate.get(access, data);
-		if (certificate.provider === "letsencrypt") {
-			const zipDirectory = internalCertificate.getLiveCertPath(data.id);
-			if (!fs.existsSync(zipDirectory)) {
-				throw new error.ItemNotFoundError(`Certificate ${certificate.nice_name} does not exists`);
-			}
-
-			const certFiles = fs
-				.readdirSync(zipDirectory)
-				.filter((fn) => fn.endsWith(".pem"))
-				.map((fn) => fs.realpathSync(path.join(zipDirectory, fn)));
-
-			const downloadName = `npm-${data.id}-${Date.now()}.zip`;
-			const opName = `/tmp/${downloadName}`;
-
-			await internalCertificate.zipFiles(certFiles, opName);
-			debug(logger, "zip completed : ", opName);
-			return {
-				fileName: opName,
-			};
-		}
-		throw new error.ValidationError("Only Let'sEncrypt certificates can be downloaded");
-	},
-
-	/**
-	 * @param   {String}  source
-	 * @param   {String}  out
-	 * @returns {Promise}
-	 */
-	zipFiles: async (source, out) => {
-		const archive = new ZipArchive({ zlib: { level: 9 } });
-		const stream = fs.createWriteStream(out);
-
-		return new Promise((resolve, reject) => {
-			source.map((fl) => {
-				const fileName = path.basename(fl);
-				debug(logger, fl, "added to certificate zip");
-				archive.file(fl, { name: fileName });
-				return true;
-			});
-			archive.on("error", (err) => reject(err)).pipe(stream);
-			stream.on("close", () => resolve());
-			archive.finalize();
-		});
-	},
-
-	/**
 	 * @param {Access}  access
 	 * @param {Object}  data
 	 * @param {Number}  data.id
@@ -395,6 +341,7 @@ const internalCertificate = {
 	 */
 	delete: async (access, data) => {
 		await access.can("certificates:delete", data.id);
+		await assertLocal(certificateModel, data.id);
 		const row = await internalCertificate.get(access, { id: data.id });
 
 		if (!row?.id) {
@@ -908,6 +855,7 @@ const internalCertificate = {
 	 */
 	renew: async (access, data) => {
 		await access.can("certificates:update", data);
+		await assertLocal(certificateModel, data.id);
 		const certificate = await internalCertificate.get(access, data);
 
 		if (certificate.provider === "letsencrypt") {

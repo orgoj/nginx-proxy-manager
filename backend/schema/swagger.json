@@ -145,11 +145,6 @@
 				"$ref": "./paths/nginx/certificates/certID/delete.json"
 			}
 		},
-		"/nginx/certificates/{certID}/download": {
-			"get": {
-				"$ref": "./paths/nginx/certificates/certID/download/get.json"
-			}
-		},
 		"/nginx/certificates/{certID}/renew": {
 			"post": {
 				"$ref": "./paths/nginx/certificates/certID/renew/post.json"

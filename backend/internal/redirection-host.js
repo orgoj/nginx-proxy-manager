@@ -1,5 +1,6 @@
 import _ from "lodash";
 import errs from "../lib/error.js";
+import { assertLocal, assertLocalRefs } from "../lib/origin.js";
 import { castJsonIfNeed } from "../lib/helpers.js";
 import utils from "../lib/utils.js";
 import redirectionHostModel from "../models/redirection_host.js";
@@ -28,6 +29,7 @@ const internalRedirectionHost = {
 
 		return access
 			.can("redirection_hosts:create", thisData)
+			.then(() => assertLocalRefs(thisData))
 			.then((/*access_data*/) => {
 				// Get a list of the domain names and check each of them against existing records
 				const domain_name_check_promises = [];
@@ -122,6 +124,8 @@ const internalRedirectionHost = {
 
 		return access
 			.can("redirection_hosts:update", thisData.id)
+			.then(() => assertLocal(redirectionHostModel, thisData.id))
+			.then(() => assertLocalRefs(thisData))
 			.then((/*access_data*/) => {
 				// Get a list of the domain names and check each of them against existing records
 				const domain_name_check_promises = [];
@@ -273,6 +277,7 @@ const internalRedirectionHost = {
 	delete: (access, data) => {
 		return access
 			.can("redirection_hosts:delete", data.id)
+			.then(() => assertLocal(redirectionHostModel, data.id))
 			.then(() => {
 				return internalRedirectionHost.get(access, { id: data.id });
 			})
@@ -318,6 +323,7 @@ const internalRedirectionHost = {
 	enable: (access, data) => {
 		return access
 			.can("redirection_hosts:update", data.id)
+			.then(() => assertLocal(redirectionHostModel, data.id))
 			.then(() => {
 				return internalRedirectionHost.get(access, {
 					id: data.id,
@@ -369,6 +375,7 @@ const internalRedirectionHost = {
 	disable: (access, data) => {
 		return access
 			.can("redirection_hosts:update", data.id)
+			.then(() => assertLocal(redirectionHostModel, data.id))
 			.then(() => {
 				return internalRedirectionHost.get(access, { id: data.id });
 			})

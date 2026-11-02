@@ -1,5 +1,6 @@
 import express from "express";
 import internalSetting from "../internal/setting.js";
+import internalSite from "../internal/site.js";
 import jwtdecode from "../lib/express/jwt-decode.js";
 import apiValidator from "../lib/validator/api.js";
 import validator from "../lib/validator/index.js";
@@ -88,7 +89,9 @@ router
 	 */
 	.put(async (req, res, next) => {
 		try {
-			const payload = await apiValidator(getValidationSchema("/settings/{settingID}", "put"), req.body);
+			const payload =
+				(await internalSite.validateSetting(req.params.setting_id, req.body)) ||
+				(await apiValidator(getValidationSchema("/settings/{settingID}", "put"), req.body));
 			payload.id = req.params.setting_id;
 			const result = await internalSetting.update(res.locals.access, payload);
 			res.status(200).send(result);
