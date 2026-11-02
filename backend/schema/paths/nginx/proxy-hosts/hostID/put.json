@@ -68,6 +68,12 @@
 						"caching_enabled": {
 							"$ref": "../../../../components/proxy-host-object.json#/properties/caching_enabled"
 						},
+						"edge_cache_enabled": {
+							"$ref": "../../../../components/proxy-host-object.json#/properties/edge_cache_enabled"
+						},
+						"cache_public_paths": {
+							"$ref": "../../../../components/proxy-host-object.json#/properties/cache_public_paths"
+						},
 						"allow_websocket_upgrade": {
 							"$ref": "../../../../components/proxy-host-object.json#/properties/allow_websocket_upgrade"
 						},

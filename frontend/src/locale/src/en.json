@@ -461,6 +461,12 @@
 	"host.flags.cache-assets": {
 		"defaultMessage": "Cache Assets"
 	},
+	"host.flags.cache-public-paths": {
+		"defaultMessage": "Public static paths, cache shared with logged-in users (space separated)"
+	},
+	"host.flags.edge-cache": {
+		"defaultMessage": "Edge Micro-Cache"
+	},
 	"host.flags.preserve-path": {
 		"defaultMessage": "Preserve Path"
 	},

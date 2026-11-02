@@ -144,6 +144,8 @@ export interface ProxyHost {
 	certificateId: number;
 	sslForced: boolean;
 	cachingEnabled: boolean;
+	edgeCacheEnabled: boolean;
+	cachePublicPaths: string;
 	blockExploits: boolean;
 	advancedConfig: string;
 	meta: Record<string, any>;

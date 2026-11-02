@@ -1,0 +1,273 @@
+#!/usr/bin/env node
+
+// orgoj fork: one-off migration of an instance whose caching lived in custom
+// includes to the per-host cache options (edge_cache_enabled, caching_enabled,
+// cache_public_paths). Dry run by default; --apply writes, regenerates all
+// proxy hosts and reloads nginx.
+
+import fs from "node:fs";
+import * as process from "node:process";
+import internalNginx from "../internal/nginx.js";
+import { PUBLIC_PATH_PATTERN } from "../lib/proxy-cache.js";
+import proxyHostModel from "../models/proxy_host.js";
+
+const USAGE = `
+Usage: ./cache-migrate [--edge-all] [--exclude <id|domain>]... [--public-paths <id|domain>=<path>[,<path>]]... [--apply]
+
+  --edge-all        turn the edge micro-cache on for every host that is not excluded
+  --exclude         no caching at all for this host (edge and assets off); repeatable
+  --public-paths    set the host's public static paths, e.g. www.example.com=/static/,/media/; repeatable
+  --apply           write the changes, regenerate all proxy hosts, reload nginx (default: dry run)
+
+Refuses --apply while a /data/nginx/custom/*.conf file still sets proxy_cache*,
+proxy_no_cache or proxy_ignore_headers. --apply is all or nothing: it renders every live
+proxy host, runs nginx -t and only then writes the DB; on failure the previous configs
+are restored and the DB is unchanged. Run it in a maintenance window: a proxy host saved
+in the UI/API before the commit makes it abort; a save during the commit waits or fails.
+`;
+
+const fail = (msg) => {
+	console.error(`cache-migrate: ${msg}`);
+	process.exit(2);
+};
+
+const args = process.argv.slice(2);
+if (args.includes("--help") || args.includes("-h")) {
+	console.log(USAGE);
+	process.exit(0);
+}
+
+let edgeAll = false;
+let apply = false;
+const excludes = [];
+const publicPaths = new Map();
+
+for (let i = 0; i < args.length; i++) {
+	const arg = args[i];
+	if (arg === "--edge-all") {
+		edgeAll = true;
+	} else if (arg === "--apply") {
+		apply = true;
+	} else if (arg === "--exclude") {
+		const value = args[++i];
+		if (!value) fail("--exclude needs a host id or domain");
+		excludes.push(value.toLowerCase());
+	} else if (arg === "--public-paths") {
+		const value = args[++i] || "";
+		const sep = value.indexOf("=");
+		if (sep < 1) fail(`--public-paths needs <id|domain>=<paths>, got "${value}"`);
+		const paths = value
+			.slice(sep + 1)
+			.split(",")
+			.map((p) => p.trim())
+			.filter((p) => p !== "");
+		for (const p of paths) {
+			if (!PUBLIC_PATH_PATTERN.test(p)) fail(`invalid public path "${p}" (expected like /static/)`);
+		}
+		publicPaths.set(value.slice(0, sep).toLowerCase(), paths.join(" "));
+	} else {
+		fail(`unknown argument "${arg}"\n${USAGE}`);
+	}
+}
+
+// Legacy cache directives in custom includes would merge with or override the generated
+// cache (proxy_ignore_headers Set-Cookie re-enables cookie replay), so refuse until removed.
+const CUSTOM_DIR = "/data/nginx/custom";
+const LEGACY = /^\s*(proxy_cache\w*|proxy_no_cache|proxy_ignore_headers)\b/;
+if (apply && fs.existsSync(CUSTOM_DIR)) {
+	const found = [];
+	for (const name of fs.readdirSync(CUSTOM_DIR).filter((n) => n.endsWith(".conf")).sort()) {
+		fs.readFileSync(`${CUSTOM_DIR}/${name}`, "utf8")
+			.split("\n")
+			.forEach((line, i) => {
+				if (LEGACY.test(line)) found.push(`${name}:${i + 1}: ${line.trim()}`);
+			});
+	}
+	if (found.length) {
+		fail(`custom includes still set cache directives; remove them first:\n  ${found.join("\n  ")}`);
+	}
+}
+
+const matches = (row, keys) => {
+	const names = [String(row.id), ...(row.domain_names || []).map((d) => d.toLowerCase())];
+	return names.find((n) => keys.includes(n));
+};
+
+const rows = await proxyHostModel.query().where("is_deleted", 0).orderBy("id");
+const usedKeys = new Set();
+const changes = [];
+
+for (const row of rows) {
+	const target = {
+		caching_enabled: !!row.caching_enabled,
+		edge_cache_enabled: !!row.edge_cache_enabled,
+		cache_public_paths: row.cache_public_paths,
+	};
+	const excluded = matches(row, excludes);
+	if (excluded) {
+		usedKeys.add(excluded);
+		target.caching_enabled = false;
+		target.edge_cache_enabled = false;
+	} else if (edgeAll) {
+		target.edge_cache_enabled = true;
+	}
+	const pathKey = matches(row, [...publicPaths.keys()]);
+	if (pathKey) {
+		usedKeys.add(pathKey);
+		target.cache_public_paths = publicPaths.get(pathKey);
+	}
+
+	const diff = Object.keys(target).filter((k) => target[k] !== (k === "cache_public_paths" ? row[k] : !!row[k]));
+	const fmt = (k) => `${k} ${JSON.stringify(k === "cache_public_paths" ? row[k] : !!row[k])}->${JSON.stringify(target[k])}`;
+	console.log(
+		`#${row.id} ${(row.domain_names || []).join(",")}: ${diff.length ? diff.map(fmt).join(" ") : "unchanged"}${excluded ? " (excluded)" : ""}`,
+	);
+	if (diff.length) {
+		changes.push({ id: row.id, patch: Object.fromEntries(diff.map((k) => [k, target[k]])) });
+	}
+}
+
+const unused = [...excludes, ...publicPaths.keys()].filter((k) => !usedKeys.has(k));
+if (unused.length) {
+	fail(`no proxy host matches: ${unused.join(", ")}`);
+}
+
+console.log(`${changes.length} of ${rows.length} proxy hosts change.`);
+if (!apply) {
+	console.log("Dry run, nothing written. Re-run with --apply.");
+	process.exit(0);
+}
+
+
+// All or nothing: render every live proxy host config with the new values and test the
+// whole nginx config; then commit the DB, and only after the commit reload nginx (a reload
+// either loads the new configs or leaves nginx on the old ones). Failure before the commit:
+// DB untouched, previous config files restored. Reload failure after the commit: nginx still
+// runs the old configs, so the DB is reverted and the files restored. If that revert is not
+// possible, the files are kept new and the operator is told to fix and reload nginx, which
+// then matches the DB. Restores skip files rewritten meanwhile by a concurrent save.
+// This process cannot share the backend's in-process nginx lock, so concurrent saves are
+// detected instead: every proxy host row must be as expected, checked under the DB write
+// lock held until the commit.
+const nginxTest = async (when) => {
+	try {
+		await internalNginx.test();
+	} catch (err) {
+		return `${when}: ${err.message}`;
+	}
+	return null;
+};
+
+const snapshot = (list) =>
+	JSON.stringify(list.map(({ meta, modified_on, ...base }) => base).sort((a, b) => a.id - b.id));
+const baseRows = () => proxyHostModel.query().where("is_deleted", 0);
+
+// Under the DB write lock (SQLite: RESERVED lock from a no-op UPDATE; MySQL/Postgres:
+// FOR UPDATE), require the rows to match `expected`, then write `writes`.
+const lockedWrite = (expected, writes) =>
+	proxyHostModel.transaction(async (trx) => {
+		await trx.raw("UPDATE proxy_host SET id = id WHERE 1 = 0");
+		const query = proxyHostModel.query(trx).where("is_deleted", 0);
+		const current = await (/sqlite/.test(String(trx.client.config.client)) ? query : query.forUpdate());
+		if (snapshot(current) !== expected) {
+			throw new Error("proxy hosts changed during the migration (concurrent save); run it again");
+		}
+		for (const [id, patch] of writes) {
+			await proxyHostModel.query(trx).where("id", id).patch(patch);
+		}
+	});
+
+const restoreFiles = (saved) => {
+	let restored = 0;
+	const skipped = [];
+	for (const [file, { previous, written }] of saved) {
+		const current = fs.existsSync(file) ? fs.readFileSync(file) : null;
+		if (written && current && !current.equals(written)) {
+			skipped.push(file);
+			continue;
+		}
+		fs.writeFileSync(file, previous);
+		restored++;
+	}
+	return `Restored ${restored} previous configs${skipped.length ? `, kept concurrently rewritten ${skipped.join(" ")}` : ""}`;
+};
+
+const preflight = await nginxTest("nginx -t before migration");
+if (preflight) fail(`${preflight}\nNothing changed.`);
+
+const beforeRows = await baseRows();
+const before = snapshot(beforeRows);
+const patches = new Map(changes.map((c) => [c.id, c.patch]));
+const afterPatch = snapshot(beforeRows.map((r) => ({ ...r, ...(patches.get(r.id) || {}) })));
+const reverts = new Map(
+	changes.map((c) => {
+		const orig = beforeRows.find((r) => r.id === c.id);
+		return [c.id, Object.fromEntries(Object.keys(c.patch).map((k) => [k, orig[k]]))];
+	}),
+);
+
+const enabled = await proxyHostModel
+	.query()
+	.where("is_deleted", 0)
+	.andWhere("enabled", 1)
+	.allowGraph(proxyHostModel.defaultAllowGraph)
+	.withGraphFetched(`[${proxyHostModel.defaultExpand.join(", ")}]`)
+	.orderBy("id");
+
+const saved = new Map(); // file -> { previous, written }
+let error = null;
+let rendered = 0;
+for (const row of enabled) {
+	const file = internalNginx.getConfigName("proxy_host", row.id);
+	if (!fs.existsSync(file)) {
+		console.log(`#${row.id}: no live config (offline host), not regenerated`);
+		continue;
+	}
+	const previous = fs.readFileSync(file);
+	try {
+		await internalNginx.generateConfig("proxy_host", Object.assign(row, patches.get(row.id) || {}));
+		saved.set(file, { previous, written: fs.readFileSync(file) });
+		rendered++;
+	} catch (err) {
+		saved.set(file, { previous, written: null });
+		error = `#${row.id}: render failed: ${err.message}`;
+		break;
+	}
+}
+if (!error) {
+	error = await nginxTest("nginx -t with new configs");
+}
+if (!error) {
+	try {
+		await lockedWrite(before, patches);
+	} catch (err) {
+		error = `DB commit failed, DB unchanged: ${err.message}`;
+	}
+}
+if (error) {
+	const files = restoreFiles(saved);
+	const after = await nginxTest("nginx -t after restore");
+	fail(`${error}\n${files}${after ? `, but ${after}` : ""}; DB unchanged; nginx was not reloaded.`);
+}
+
+try {
+	await internalNginx.reload();
+} catch (reloadErr) {
+	// nginx still runs the old configs: revert the DB and the files to match it.
+	try {
+		await lockedWrite(afterPatch, reverts);
+	} catch (revertErr) {
+		console.error(
+			`cache-migrate: INCOMPLETE: nginx reload failed (${reloadErr.message}) and the DB revert failed (${revertErr.message}).\n` +
+				"The DB and the config files have the NEW values, the running nginx still has the OLD ones.\n" +
+				"Fix the reload problem, then run: nginx -t && nginx -s reload",
+		);
+		process.exit(3);
+	}
+	const files = restoreFiles(saved);
+	const after = await nginxTest("nginx -t after restore");
+	fail(`nginx reload failed, DB reverted: ${reloadErr.message}\n${files}${after ? `, but ${after}` : ""}; nginx still runs the previous configs.`);
+}
+
+console.log(`Applied ${changes.length} changes, regenerated ${rendered} proxy hosts, nginx reloaded.`);
+process.exit(0);

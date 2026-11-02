@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import _ from "lodash";
 import errs from "../lib/error.js";
 import withNginxLock from "../lib/nginx-lock.js";
+import { templateVars as proxyCacheVars } from "../lib/proxy-cache.js";
 import utils from "../lib/utils.js";
 import { debug, nginx as logger } from "../logger.js";
 import accessListModel from "../models/access_list.js";
@@ -276,6 +277,10 @@ const internalNginx = {
 
 			// Set the IPv6 setting for the host
 			host.ipv6 = internalNginx.ipv6Enabled();
+
+			if (nice_host_type === "proxy_host") {
+				Object.assign(host, proxyCacheVars(host));
+			}
 
 			locationsPromise.then(() => {
 				renderEngine

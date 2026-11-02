@@ -461,6 +461,12 @@
 	"host.flags.cache-assets": {
 		"defaultMessage": "Puhverda failid"
 	},
+	"host.flags.cache-public-paths": {
+		"defaultMessage": "Avalikud staatilised teed, puhver jagatud sisselogitud kasutajatega (tühikuga eraldatud)"
+	},
+	"host.flags.edge-cache": {
+		"defaultMessage": "Lühiajaline vastuste puhver"
+	},
 	"host.flags.preserve-path": {
 		"defaultMessage": "Säilita tee"
 	},

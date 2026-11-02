@@ -151,6 +151,18 @@
 			"description": "Trust the forwarded headers",
 			"example": false
 		},
+		"edge_cache_enabled": {
+			"type": "boolean",
+			"description": "Edge micro-cache of all safe responses (implies asset caching)",
+			"example": false
+		},
+		"cache_public_paths": {
+			"type": "string",
+			"description": "Space separated URI prefixes like /static/ whose cache is shared with clients that send cookies",
+			"maxLength": 255,
+			"pattern": "^$|^/[A-Za-z0-9._~-]+(/[A-Za-z0-9._~-]+)*/( +/[A-Za-z0-9._~-]+(/[A-Za-z0-9._~-]+)*/)*$",
+			"example": "/static/"
+		},
 		"certificate": {
 			"oneOf": [
 				{

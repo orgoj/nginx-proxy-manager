@@ -15,6 +15,8 @@ const fetchProxyHost = (id: number | "new") => {
 			certificateId: 0,
 			sslForced: false,
 			cachingEnabled: false,
+			edgeCacheEnabled: false,
+			cachePublicPaths: "/static/",
 			blockExploits: false,
 			advancedConfig: "",
 			meta: {},

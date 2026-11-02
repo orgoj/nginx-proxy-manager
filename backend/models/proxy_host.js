@@ -15,6 +15,7 @@ const boolFields = [
 	"is_deleted",
 	"ssl_forced",
 	"caching_enabled",
+	"edge_cache_enabled",
 	"block_exploits",
 	"allow_websocket_upgrade",
 	"http2_support",

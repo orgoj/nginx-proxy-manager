@@ -260,6 +260,59 @@ reloads. A logrotate file is checked with `logrotate -d` (errors and warnings re
 written with mode `0644`. Only the fixed names above are loaded by nginx; include other files
 from them yourself.
 
+## Proxy host caching
+
+Each proxy host has three cache options:
+
+- **Cache Assets** caches static files (css, js, images, fonts) only.
+- **Edge Micro-Cache** caches every response briefly and serves a stale copy while the
+  backend fails or the entry is updated. It also covers the assets.
+- **Public static paths** (default `/static/`) are URI prefixes, separated by spaces, whose
+  cache is shared with clients that send cookies.
+
+Both cache modes work at server level, so access lists, basic auth and custom locations
+apply to cached files as well.
+
+Responses are never stored when they:
+
+- carry `Set-Cookie` or `Vary: *`;
+- have status 401, 403 or 5xx;
+- answer a request with `Authorization` or `Cookie`.
+
+Requests with a `Cookie` read the cache only under the public paths. With Cache Assets
+alone, the backend's `Cache-Control`/`Expires` are honoured: `private`, `no-store` and
+`no-cache` are never stored, and the backend's lifetime wins. Cookie requests under the
+public paths may also fill the cache.
+
+The Edge Micro-Cache stores anonymous responses for a short fixed time, even when the
+backend marks them `private`/`no-store`. Many applications do that for every page, and a
+request without cookies or credentials gets no personal content. The cache key contains the
+domain and changes whenever the host is saved.
+
+Lifetimes (nginx time values; with Cache Assets alone, they apply only when the backend sends
+no lifetime):
+
+```yml
+    environment:
+      NPM_CACHE_EDGE_VALID_200: '2s'
+      NPM_CACHE_EDGE_VALID_301_302: '2m'
+      NPM_CACHE_EDGE_VALID_404: '5m'
+      NPM_CACHE_ASSET_VALID_200: '30m'
+      NPM_CACHE_ASSET_VALID_404: '1m'
+```
+
+The cache status of each request is the field after the timestamp in the host access log.
+A page that sets a cookie for anonymous visitors is never cached. That is intended: the fix
+belongs in the application.
+
+To move caching from your own custom includes to these options:
+
+1. Remove the `proxy_cache*` lines from `/data/nginx/custom/server_proxy.conf`.
+2. Preview the changes with `docker exec <npm> sh -c 'cd /app && node scripts/cache-migrate
+   --edge-all --exclude <domain> --public-paths <domain>=/static/,/media/'` (a dry run).
+3. Repeat the command with `--apply` to write the changes, regenerate all proxy hosts and
+   reload nginx.
+
 ## Only custom access logs
 
 With `DISABLE_ACCESS_LOG` set, NPM writes no access logs of its own (http, stream, hosts,

@@ -78,6 +78,8 @@ const ProxyHostModal = EasyModal.create(({ id, visible, remove }: Props) => {
 							forwardPort: data?.forwardPort || undefined,
 							accessListId: data?.accessListId || 0,
 							cachingEnabled: data?.cachingEnabled || false,
+							edgeCacheEnabled: data?.edgeCacheEnabled || false,
+							cachePublicPaths: data?.cachePublicPaths ?? "/static/",
 							blockExploits: data?.blockExploits || false,
 							allowWebsocketUpgrade: data?.allowWebsocketUpgrade || false,
 							// Locations tab
@@ -281,6 +283,45 @@ const ProxyHostModal = EasyModal.create(({ id, visible, remove }: Props) => {
 																	</Field>
 																</span>
 															</label>
+														</div>
+														<div>
+															<label className="row" htmlFor="edgeCacheEnabled">
+																<span className="col">
+																	<T id="host.flags.edge-cache" />
+																</span>
+																<span className="col-auto">
+																	<Field name="edgeCacheEnabled" type="checkbox">
+																		{({ field }: any) => (
+																			<label className="form-check form-check-single form-switch">
+																				<input
+																					{...field}
+																					id="edgeCacheEnabled"
+																					className={cn("form-check-input", {
+																						"bg-lime": field.checked,
+																					})}
+																					type="checkbox"
+																				/>
+																			</label>
+																		)}
+																	</Field>
+																</span>
+															</label>
+														</div>
+														<div className="py-2">
+															<label className="form-label" htmlFor="cachePublicPaths">
+																<T id="host.flags.cache-public-paths" />
+															</label>
+															<Field name="cachePublicPaths">
+																{({ field }: any) => (
+																	<input
+																		id="cachePublicPaths"
+																		type="text"
+																		className="form-control"
+																		placeholder="/static/ /media/"
+																		{...field}
+																	/>
+																)}
+															</Field>
 														</div>
 														<div>
 															<label className="row" htmlFor="blockExploits">
