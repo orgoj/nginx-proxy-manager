@@ -12,7 +12,7 @@ docker run --rm \
 	-v "$(pwd)/backend:/app" \
 	-w /app \
 	"${TESTING_IMAGE}" \
-	sh -c 'yarn install --frozen-lockfile && yarn lint . && rm -rf node_modules'
+	sh -c 'yarn install --frozen-lockfile && yarn lint . && yarn test && rm -rf node_modules'
 echo -e "${BLUE}❯ ${GREEN}Testing Complete${RESET}"
 
 # Build
@@ -29,3 +29,5 @@ docker build --pull --no-cache --compress \
 	--build-arg TEST_CA=1 \
 	.
 echo -e "${BLUE}❯ ${GREEN}Building Complete${RESET}"
+
+python3 test/host-header-smoke.py "${IMAGE:-nginx-proxy-manager}:${BRANCH_LOWER:-unknown}-ci-${BUILD_NUMBER:-0000}"
