@@ -1,0 +1,7 @@
+{
+	"type": "array",
+	"description": "Ban Agent Token List",
+	"items": {
+		"$ref": "./ban-agent-token-object.json"
+	}
+}

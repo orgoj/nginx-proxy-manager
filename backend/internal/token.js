@@ -27,6 +27,10 @@ export default {
 		data.scope = data.scope || "user";
 		data.expiry = data.expiry || "1d";
 
+		if (data.scope !== "user") {
+			throw new errs.AuthError(`Invalid scope: ${data.scope}`);
+		}
+
 		const user = await userModel
 			.query()
 			.where("email", data.identity.toLowerCase().trim())
@@ -109,6 +113,10 @@ export default {
 		const thisData = data || {};
 
 		thisData.expiry = thisData.expiry || "1d";
+
+		if (access?.token?.hasScope("ban-agent") || thisData.scope === "ban-agent") {
+			throw new errs.AuthError("Ban-agent tokens cannot be minted or refreshed via /tokens");
+		}
 
 		if (access?.token.getUserId(0)) {
 			// Create a moment of the expiry expression

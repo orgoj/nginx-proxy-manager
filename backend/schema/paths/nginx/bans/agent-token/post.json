@@ -1,0 +1,72 @@
+{
+	"operationId": "mintBanAgentToken",
+	"summary": "Issue a scoped ban-agent service token (admin only)",
+	"tags": ["bans"],
+	"security": [
+		{
+			"bearerAuth": ["block_rules.manage"]
+		}
+	],
+	"requestBody": {
+		"description": "Ban Agent Token Options",
+		"required": false,
+		"content": {
+			"application/json": {
+				"schema": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"label": {
+							"type": "string",
+							"minLength": 1,
+							"maxLength": 64,
+							"example": "fail2ban-edge"
+						},
+						"expiry": {
+							"type": "string",
+							"minLength": 2,
+							"maxLength": 16,
+							"example": "365d"
+						}
+					}
+				}
+			}
+		}
+	},
+	"responses": {
+		"200": {
+			"description": "200 response",
+			"content": {
+				"application/json": {
+					"schema": {
+						"type": "object",
+						"required": ["id", "jti", "token", "expires", "scope", "label"],
+						"properties": {
+							"id": {
+								"type": "integer",
+								"minimum": 1
+							},
+							"jti": {
+								"type": "string"
+							},
+							"token": {
+								"type": "string"
+							},
+							"expires": {
+								"type": "string",
+								"format": "date-time"
+							},
+							"scope": {
+								"type": "string",
+								"enum": ["ban-agent"]
+							},
+							"label": {
+								"type": "string"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

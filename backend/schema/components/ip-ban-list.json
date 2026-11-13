@@ -1,0 +1,7 @@
+{
+	"type": "array",
+	"description": "List of active Dynamic IP Ban objects",
+	"items": {
+		"$ref": "./ip-ban-object.json"
+	}
+}

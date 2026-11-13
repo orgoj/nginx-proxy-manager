@@ -4,6 +4,7 @@ import Alert from "react-bootstrap/Alert";
 import { Button, Loading } from "src/components";
 import { T } from "src/locale";
 import { showDeleteConfirmModal } from "src/modals";
+import BansSection from "./BansSection";
 import {
 	type BlockRule,
 	type BlockRuleAction,
@@ -117,7 +118,8 @@ export default function BlockRulesPage() {
 		(form.type !== "uri_referer" || form.refererPattern.trim().length > 0);
 
 	return (
-		<div className="card mt-4">
+		<>
+			<div className="card mt-4">
 			<div className="card-status-top bg-red" />
 			<div className="card-header d-flex align-items-center">
 				<h2 className="mt-1 mb-0 me-auto">
@@ -327,5 +329,7 @@ export default function BlockRulesPage() {
 				)}
 			</div>
 		</div>
+			<BansSection />
+		</>
 	);
 }

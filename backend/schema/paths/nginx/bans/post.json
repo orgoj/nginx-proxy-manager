@@ -1,0 +1,55 @@
+{
+	"operationId": "createIpBan",
+	"summary": "Create or refresh a dynamic IP ban",
+	"tags": ["bans"],
+	"security": [
+		{
+			"bearerAuth": ["bans.create"]
+		}
+	],
+	"requestBody": {
+		"description": "IP Ban Payload",
+		"required": true,
+		"content": {
+			"application/json": {
+				"schema": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": ["ip"],
+					"properties": {
+						"ip": {
+							"$ref": "../../../components/ip-ban-object.json#/properties/ip"
+						},
+						"action": {
+							"$ref": "../../../components/ip-ban-object.json#/properties/action"
+						},
+						"ttl_seconds": {
+							"type": "integer",
+							"minimum": 1,
+							"maximum": 31536000,
+							"example": 3600
+						},
+						"expires_on": {
+							"$ref": "../../../components/ip-ban-object.json#/properties/expires_on"
+						},
+						"reason": {
+							"$ref": "../../../components/ip-ban-object.json#/properties/reason"
+						}
+					}
+				}
+			}
+		}
+	},
+	"responses": {
+		"201": {
+			"description": "201 response",
+			"content": {
+				"application/json": {
+					"schema": {
+						"$ref": "../../../components/ip-ban-object.json"
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,40 @@
+{
+	"operationId": "unbanIp",
+	"summary": "Revoke an active IP ban by IP address",
+	"tags": ["bans"],
+	"security": [
+		{
+			"bearerAuth": ["bans.revoke"]
+		}
+	],
+	"requestBody": {
+		"description": "IP Unban Payload",
+		"required": true,
+		"content": {
+			"application/json": {
+				"schema": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": ["ip"],
+					"properties": {
+						"ip": {
+							"$ref": "../../../../components/ip-ban-object.json#/properties/ip"
+						}
+					}
+				}
+			}
+		}
+	},
+	"responses": {
+		"200": {
+			"description": "200 response",
+			"content": {
+				"application/json": {
+					"schema": {
+						"type": "boolean"
+					}
+				}
+			}
+		}
+	}
+}

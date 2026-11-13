@@ -1,0 +1,34 @@
+{
+	"operationId": "deleteIpBan",
+	"summary": "Revoke an active IP ban by ID",
+	"tags": ["bans"],
+	"security": [
+		{
+			"bearerAuth": ["bans.revoke"]
+		}
+	],
+	"parameters": [
+		{
+			"in": "path",
+			"name": "banID",
+			"description": "IP Ban ID",
+			"required": true,
+			"schema": {
+				"$ref": "../../../../common.json#/properties/id"
+			},
+			"example": 1
+		}
+	],
+	"responses": {
+		"200": {
+			"description": "200 response",
+			"content": {
+				"application/json": {
+					"schema": {
+						"type": "boolean"
+					}
+				}
+			}
+		}
+	}
+}

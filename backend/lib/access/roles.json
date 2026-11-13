@@ -33,6 +33,19 @@
 					}
 				}
 			}
+		},
+		"ban-agent": {
+			"type": "object",
+			"required": ["scope"],
+			"properties": {
+				"scope": {
+					"type": "array",
+					"contains": {
+						"type": "string",
+						"pattern": "^ban-agent$"
+					}
+				}
+			}
 		}
 	}
 }

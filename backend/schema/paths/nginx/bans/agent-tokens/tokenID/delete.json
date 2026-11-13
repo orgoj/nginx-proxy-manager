@@ -1,0 +1,35 @@
+{
+	"operationId": "revokeBanAgentToken",
+	"summary": "Revoke an issued ban-agent service token (admin only)",
+	"tags": ["bans"],
+	"security": [
+		{
+			"bearerAuth": ["block_rules.manage"]
+		}
+	],
+	"parameters": [
+		{
+			"in": "path",
+			"name": "tokenID",
+			"description": "Ban Agent Token ID",
+			"required": true,
+			"schema": {
+				"$ref": "../../../../../common.json#/properties/id"
+			},
+			"example": 1
+		}
+	],
+	"responses": {
+		"200": {
+			"description": "200 response",
+			"content": {
+				"application/json": {
+					"schema": {
+						"type": "boolean",
+						"example": true
+					}
+				}
+			}
+		}
+	}
+}

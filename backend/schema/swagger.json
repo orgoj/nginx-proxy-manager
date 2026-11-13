@@ -37,6 +37,10 @@
 			"description": "Endpoints related to Global Block Rules"
 		},
 		{
+			"name": "bans",
+			"description": "Endpoints related to Dynamic IP Bans"
+		},
+		{
 			"name": "certificates",
 			"description": "Endpoints related to Certificates"
 		},
@@ -135,6 +139,39 @@
 			},
 			"delete": {
 				"$ref": "./paths/nginx/block-rules/ruleID/delete.json"
+			}
+		},
+		"/nginx/bans": {
+			"get": {
+				"$ref": "./paths/nginx/bans/get.json"
+			},
+			"post": {
+				"$ref": "./paths/nginx/bans/post.json"
+			}
+		},
+		"/nginx/bans/unban": {
+			"post": {
+				"$ref": "./paths/nginx/bans/unban/post.json"
+			}
+		},
+		"/nginx/bans/agent-token": {
+			"post": {
+				"$ref": "./paths/nginx/bans/agent-token/post.json"
+			}
+		},
+		"/nginx/bans/agent-tokens": {
+			"get": {
+				"$ref": "./paths/nginx/bans/agent-tokens/get.json"
+			}
+		},
+		"/nginx/bans/agent-tokens/{tokenID}": {
+			"delete": {
+				"$ref": "./paths/nginx/bans/agent-tokens/tokenID/delete.json"
+			}
+		},
+		"/nginx/bans/{banID}": {
+			"delete": {
+				"$ref": "./paths/nginx/bans/banID/delete.json"
 			}
 		},
 		"/nginx/certificates": {

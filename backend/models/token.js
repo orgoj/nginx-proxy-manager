@@ -30,7 +30,9 @@ export default () => {
 				expiresIn: payload.expiresIn || "1d",
 			};
 
-			payload.jti = crypto.randomBytes(12).toString("base64").substring(-8);
+			if (!payload.jti) {
+				payload.jti = crypto.randomBytes(12).toString("base64").substring(-8);
+			}
 
 			return new Promise((resolve, reject) => {
 				jwt.sign(payload, getPrivateKey(), options, (err, token) => {

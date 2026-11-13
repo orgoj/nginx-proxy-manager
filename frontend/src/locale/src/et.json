@@ -149,6 +149,48 @@
 	"auto": {
 		"defaultMessage": "Automaatne"
 	},
+	"bans": {
+		"defaultMessage": "Ajutised IP-keelud"
+	},
+	"bans.add": {
+		"defaultMessage": "Keela IP"
+	},
+	"bans.agent-token": {
+		"defaultMessage": "Ban-agendi luba"
+	},
+	"bans.agent-tokens": {
+		"defaultMessage": "Agendi load"
+	},
+	"bans.empty": {
+		"defaultMessage": "Aktiivseid ajutisi IP-keelde pole"
+	},
+	"bans.expires": {
+		"defaultMessage": "Aegub"
+	},
+	"bans.ip": {
+		"defaultMessage": "IP-aadress"
+	},
+	"bans.reason": {
+		"defaultMessage": "Põhjus"
+	},
+	"bans.revoke-token": {
+		"defaultMessage": "Tühista"
+	},
+	"bans.revoked": {
+		"defaultMessage": "Tühistatud"
+	},
+	"bans.saved": {
+		"defaultMessage": "IP-keeld uuendatud"
+	},
+	"bans.source": {
+		"defaultMessage": "Allikas"
+	},
+	"bans.ttl": {
+		"defaultMessage": "Kestus (sekundit)"
+	},
+	"bans.unban": {
+		"defaultMessage": "Eemalda keeld"
+	},
 	"block-rules": {
 		"defaultMessage": "Üldised blokeerimisreeglid"
 	},

@@ -46,3 +46,65 @@ export const toggleBlockRule = async (id: number, enabled: boolean): Promise<boo
 
 export const deleteBlockRule = async (id: number): Promise<boolean> =>
 	await api.del({ url: `/nginx/block-rules/${id}` });
+
+export interface IpBan {
+	id: number;
+	createdOn: string;
+	modifiedOn: string;
+	expiresOn: string;
+	ip: string;
+	action: BlockRuleAction;
+	reason: string;
+	source: string;
+}
+
+export interface IpBanPayload {
+	ip: string;
+	action: BlockRuleAction;
+	ttlSeconds: number;
+	reason?: string;
+}
+
+export interface AgentTokenResponse {
+	id: number;
+	jti: string;
+	token: string;
+	expires: string;
+	scope: string;
+	label: string;
+}
+
+export interface BanAgentTokenRecord {
+	id: number;
+	createdOn: string;
+	modifiedOn: string;
+	expiresOn: string;
+	isRevoked: boolean;
+	jti: string;
+	label: string;
+	createdBy: number;
+}
+
+export const useIpBans = () =>
+	useQuery<IpBan[], Error>({
+		queryKey: ["ip-bans"],
+		queryFn: () => api.get({ url: "/nginx/bans" }),
+	});
+
+export const useBanAgentTokens = () =>
+	useQuery<BanAgentTokenRecord[], Error>({
+		queryKey: ["ban-agent-tokens"],
+		queryFn: () => api.get({ url: "/nginx/bans/agent-tokens" }),
+	});
+
+export const createIpBan = async (data: IpBanPayload): Promise<IpBan> =>
+	await api.post({ url: "/nginx/bans", data });
+
+export const revokeIpBan = async (id: number): Promise<boolean> =>
+	await api.del({ url: `/nginx/bans/${id}` });
+
+export const mintBanAgentToken = async (label = "ban-agent", expiry = "365d"): Promise<AgentTokenResponse> =>
+	await api.post({ url: "/nginx/bans/agent-token", data: { label, expiry } });
+
+export const revokeBanAgentToken = async (id: number): Promise<boolean> =>
+	await api.del({ url: `/nginx/bans/agent-tokens/${id}` });

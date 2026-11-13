@@ -49,6 +49,7 @@ rm -f /run/nginx/nginx.pid
 if [ ! -f /data/nginx/global/block-rules.conf ]; then
 	cat >/data/nginx/global/block-rules.conf <<'EOF'
 # Managed by Nginx Proxy Manager (block_rule). Do not edit by hand.
+map "" $npm_blk_enabled { default 1; }
 map $uri $npm_blk_acme {
 	default 0;
 	"~^/\.well-known/acme-challenge/" 1;
@@ -63,3 +64,16 @@ map "" $npm_blk_static_rule { default ""; }
 EOF
 	chmod 644 /data/nginx/global/block-rules.conf
 fi
+
+# Runtime Lua ban control dir (unix socket + startup secret)
+if [ -L /run/nginx-pm-control ]; then
+	rm -f /run/nginx-pm-control
+fi
+mkdir -p /run/nginx-pm-control
+chmod 700 /run/nginx-pm-control
+rm -f /run/nginx-pm-control/ban.sock
+if [ -L /run/nginx-pm-control/ban.secret ] || [ ! -s /run/nginx-pm-control/ban.secret ]; then
+	rm -f /run/nginx-pm-control/ban.secret
+	(umask 077 && head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n' >/run/nginx-pm-control/ban.secret)
+fi
+chmod 600 /run/nginx-pm-control/ban.secret

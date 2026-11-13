@@ -6,4 +6,11 @@ set -e
 . /usr/bin/common.sh
 
 log_info 'Starting nginx ...'
+if [ -L /run/nginx-pm-control ]; then
+	echo "Refusing symlink /run/nginx-pm-control" >&2
+	exit 1
+fi
+if [ -L /run/nginx-pm-control/ban.sock ] || [ -S /run/nginx-pm-control/ban.sock ]; then
+	rm -f /run/nginx-pm-control/ban.sock
+fi
 exec s6-setuidgid "$PUID:$PGID" nginx

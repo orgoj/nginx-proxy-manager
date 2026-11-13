@@ -347,7 +347,7 @@ export const assertBlockRuleRenderable = (rule) => {
  * TASK-17 JSON log_format directives referencing $npm_blk_rule never fail nginx -t.
  */
 export const renderBlockRulesConfig = (rules, { enabled = true } = {}) => {
-	const header = "# Managed by Nginx Proxy Manager (block_rule). Do not edit by hand.\n";
+	const header = `# Managed by Nginx Proxy Manager (block_rule). Do not edit by hand.\nmap "" $npm_blk_enabled { default ${enabled ? "1" : "0"}; }\n`;
 	const acmeMaps = [
 		"map $uri $npm_blk_acme {",
 		"\tdefault 0;",

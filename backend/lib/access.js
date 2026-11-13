@@ -13,11 +13,13 @@ import Ajv from "ajv/dist/2020.js";
 import _ from "lodash";
 import { access as logger } from "../logger.js";
 import authModel from "../models/auth.js";
+import banAgentTokenModel from "../models/ban_agent_token.js";
 import proxyHostModel, { scopeToOwnerOrAllowed } from "../models/proxy_host.js";
 import TokenModel from "../models/token.js";
 import userModel from "../models/user.js";
 import permsSchema from "./access/permissions.json" with { type: "json" };
 import roleSchema from "./access/roles.json" with { type: "json" };
+import { parseDbUtcMs, verifyTokenVerifier } from "./bans.js";
 import errs from "./error.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -29,6 +31,7 @@ export default function (tokenString) {
 	let initialised = false;
 	const objectCache = {};
 	let allowInternalAccess = false;
+	let banAgent = null;
 	let userRoles = [];
 	let permissions = {};
 
@@ -47,6 +50,34 @@ export default function (tokenString) {
 		}
 
 		tokenData = await Token.load(tokenString);
+
+		if (Token.hasScope("ban-agent")) {
+			if (!Array.isArray(tokenData.scope) || tokenData.scope.length !== 1 || tokenData.attrs?.id) {
+				throw new errs.AuthError("Invalid ban-agent token scope");
+			}
+			if (typeof tokenData.jti !== "string" || !tokenData.jti) {
+				throw new errs.TokenRevokedError("Ban agent token missing jti");
+			}
+			const agentRow = await banAgentTokenModel
+				.query()
+				.where("jti", tokenData.jti)
+				.andWhere("is_revoked", 0)
+				.first();
+			if (!agentRow || !verifyTokenVerifier(tokenString, agentRow.token_hash)) {
+				throw new errs.TokenRevokedError("Ban agent token is revoked or unknown");
+			}
+			const expMs = parseDbUtcMs(agentRow.expires_on);
+			if (!Number.isFinite(expMs) || expMs <= Date.now()) {
+				throw new errs.AuthError("Ban agent token has expired");
+			}
+			banAgent = {
+				id: agentRow.id,
+				label: agentRow.label,
+				jti: agentRow.jti,
+			};
+			initialised = true;
+			return;
+		}
 
 		// At this point we need to load the user from the DB and make sure they:
 		// - exist (and not soft deleted)
@@ -213,6 +244,7 @@ export default function (tokenString) {
 	return {
 		token: Token,
 
+		getBanAgent: () => banAgent,
 		getPermissions: () => permissions,
 		getRoles: () => userRoles,
 		hasRole: (role) => userRoles.includes(role),

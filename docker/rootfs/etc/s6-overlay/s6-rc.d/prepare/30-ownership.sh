@@ -12,6 +12,7 @@ locations=(
 	"/data"
 	"/etc/letsencrypt"
 	"/run/nginx"
+	"/run/nginx-pm-control"
 	"/tmp/nginx"
 	"/var/cache/nginx"
 	"/var/lib/logrotate"

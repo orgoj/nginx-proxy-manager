@@ -149,6 +149,48 @@
 	"auto": {
 		"defaultMessage": "Auto"
 	},
+	"bans": {
+		"defaultMessage": "Temporary IP Bans"
+	},
+	"bans.add": {
+		"defaultMessage": "Ban IP"
+	},
+	"bans.agent-token": {
+		"defaultMessage": "Ban Agent Token"
+	},
+	"bans.agent-tokens": {
+		"defaultMessage": "Agent Tokens"
+	},
+	"bans.empty": {
+		"defaultMessage": "No active temporary IP bans"
+	},
+	"bans.expires": {
+		"defaultMessage": "Expires"
+	},
+	"bans.ip": {
+		"defaultMessage": "IP Address"
+	},
+	"bans.reason": {
+		"defaultMessage": "Reason"
+	},
+	"bans.revoke-token": {
+		"defaultMessage": "Revoke"
+	},
+	"bans.revoked": {
+		"defaultMessage": "Revoked"
+	},
+	"bans.saved": {
+		"defaultMessage": "IP ban updated"
+	},
+	"bans.source": {
+		"defaultMessage": "Source"
+	},
+	"bans.ttl": {
+		"defaultMessage": "Duration (seconds)"
+	},
+	"bans.unban": {
+		"defaultMessage": "Unban"
+	},
 	"block-rules": {
 		"defaultMessage": "Global Block Rules"
 	},

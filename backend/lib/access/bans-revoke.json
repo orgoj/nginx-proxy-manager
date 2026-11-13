@@ -1,0 +1,7 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"anyOf": [
+		{ "$ref": "roles#/definitions/admin" },
+		{ "$ref": "roles#/definitions/ban-agent" }
+	]
+}

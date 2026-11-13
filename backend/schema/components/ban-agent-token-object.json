@@ -1,0 +1,49 @@
+{
+	"type": "object",
+	"description": "Ban Agent Service Token record",
+	"required": [
+		"id",
+		"created_on",
+		"modified_on",
+		"expires_on",
+		"is_revoked",
+		"jti",
+		"label",
+		"created_by"
+	],
+	"properties": {
+		"id": {
+			"$ref": "../common.json#/properties/id"
+		},
+		"created_on": {
+			"$ref": "../common.json#/properties/created_on"
+		},
+		"modified_on": {
+			"$ref": "../common.json#/properties/modified_on"
+		},
+		"expires_on": {
+			"type": "string",
+			"format": "date-time",
+			"example": "2027-11-13T13:30:00.000Z"
+		},
+		"is_revoked": {
+			"type": "boolean",
+			"example": false
+		},
+		"jti": {
+			"type": "string",
+			"minLength": 1,
+			"maxLength": 64
+		},
+		"label": {
+			"type": "string",
+			"minLength": 1,
+			"maxLength": 64,
+			"example": "fail2ban-edge"
+		},
+		"created_by": {
+			"type": "integer",
+			"minimum": 0
+		}
+	}
+}

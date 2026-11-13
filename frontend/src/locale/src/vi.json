@@ -149,6 +149,48 @@
 	"auto": {
 		"defaultMessage": "Tự động"
 	},
+	"bans": {
+		"defaultMessage": "Cấm IP tạm thời"
+	},
+	"bans.add": {
+		"defaultMessage": "Cấm IP"
+	},
+	"bans.agent-token": {
+		"defaultMessage": "Token tác nhân cấm"
+	},
+	"bans.agent-tokens": {
+		"defaultMessage": "Token tác nhân"
+	},
+	"bans.empty": {
+		"defaultMessage": "Không có lệnh cấm IP tạm thời nào"
+	},
+	"bans.expires": {
+		"defaultMessage": "Hết hạn"
+	},
+	"bans.ip": {
+		"defaultMessage": "Địa chỉ IP"
+	},
+	"bans.reason": {
+		"defaultMessage": "Lý do"
+	},
+	"bans.revoke-token": {
+		"defaultMessage": "Thu hồi"
+	},
+	"bans.revoked": {
+		"defaultMessage": "Đã thu hồi"
+	},
+	"bans.saved": {
+		"defaultMessage": "Đã cập nhật lệnh cấm IP"
+	},
+	"bans.source": {
+		"defaultMessage": "Nguồn"
+	},
+	"bans.ttl": {
+		"defaultMessage": "Thời hạn (giây)"
+	},
+	"bans.unban": {
+		"defaultMessage": "Bỏ cấm"
+	},
 	"block-rules": {
 		"defaultMessage": "Quy tắc chặn toàn cục"
 	},

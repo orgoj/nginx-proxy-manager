@@ -1,0 +1,22 @@
+{
+	"operationId": "getIpBans",
+	"summary": "List active dynamic IP bans",
+	"tags": ["bans"],
+	"security": [
+		{
+			"bearerAuth": ["bans.list"]
+		}
+	],
+	"responses": {
+		"200": {
+			"description": "200 response",
+			"content": {
+				"application/json": {
+					"schema": {
+						"$ref": "../../../components/ip-ban-list.json"
+					}
+				}
+			}
+		}
+	}
+}

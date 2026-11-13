@@ -2,6 +2,7 @@
 
 import app from "./app.js";
 import internalBlockRule from "./internal/block-rule.js";
+import internalIpBan from "./internal/ip-ban.js";
 import internalCertificate from "./internal/certificate.js";
 import internalIpRanges from "./internal/ip_ranges.js";
 import { global as logger } from "./logger.js";
@@ -18,6 +19,11 @@ async function appStart() {
 		.then(() =>
 			internalBlockRule.syncOnStartup().catch((err) => {
 				logger.error("Global block rules startup sync failed, continuing anyway:", err.message);
+			}),
+		)
+		.then(() =>
+			internalIpBan.syncOnStartup().catch((err) => {
+				logger.error("Dynamic IP bans startup sync failed, continuing anyway:", err.message);
 			}),
 		)
 		.then(() => {
