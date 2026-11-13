@@ -35,6 +35,8 @@ vi.mock("./api", () => ({
 				note: "crawlers",
 				approvedBy: "michael",
 				source: "ui",
+				hitCount: 7,
+				lastHitOn: "2026-11-13T11:30:00.000Z",
 			},
 		],
 	}),
@@ -50,6 +52,8 @@ vi.mock("./api", () => ({
 				action: 403,
 				reason: "ssh brute",
 				source: "agent:3:fail2ban",
+				hitCount: 4,
+				lastHitOn: "2026-11-13T11:45:00.000Z",
 			},
 		],
 	}),
@@ -141,6 +145,10 @@ describe("BlockRulesPage", () => {
 		renderPage();
 		expect(screen.getByText("198.51.100.77")).toBeVisible();
 		expect(screen.getByText("ssh brute")).toBeVisible();
+		expect(screen.getByText("7")).toBeVisible();
+		expect(screen.getByText("2026-11-13T11:30:00.000Z")).toBeVisible();
+		expect(screen.getByText("4")).toBeVisible();
+		expect(screen.getByText("2026-11-13T11:45:00.000Z")).toBeVisible();
 
 		fireEvent.click(screen.getByRole("button", { name: "Ban IP" }));
 		fireEvent.change(screen.getByLabelText("IP Address"), { target: { value: "203.0.113.55" } });

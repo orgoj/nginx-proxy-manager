@@ -161,6 +161,9 @@ export default function BlockRulesPage() {
 										<T id="block-rules.note" />
 									</th>
 									<th>
+										<T id="block-rules.hits" />
+									</th>
+									<th>
 										<T id="column.status" />
 									</th>
 									<th />
@@ -183,6 +186,10 @@ export default function BlockRulesPage() {
 										<td>{rule.action}</td>
 										<td>{rule.approvedBy || "-"}</td>
 										<td>{rule.note || "-"}</td>
+										<td>
+											<span>{rule.hitCount ?? 0}</span>
+											{rule.lastHitOn ? <div className="text-secondary small">{rule.lastHitOn}</div> : null}
+										</td>
 										<td>
 											<span className={`badge ${rule.enabled ? "bg-green-lt" : "bg-secondary-lt"}`}>
 												<T id={rule.enabled ? "enabled" : "disabled"} />

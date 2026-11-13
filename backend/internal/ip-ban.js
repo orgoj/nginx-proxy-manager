@@ -1,11 +1,13 @@
 import crypto from "node:crypto";
 import {
 	MAX_ACTIVE_BANS,
+	attachHitCounters,
 	createTokenVerifier,
 	deriveBanSource,
 	formatDbUtcDateTime,
 	normalizeSingleIp,
 	parseDbUtcMs,
+	readLuaBanHits,
 	sendLuaBanControl,
 	validateBanInput,
 	writeBanBackupFile,
@@ -159,7 +161,12 @@ const internalIpBan = {
 	getAll: async (access) => {
 		await access.can("bans:list");
 		const active = await fetchActiveBans();
-		return active.map(({ row }) => serializeBan(row));
+		const hits = await readLuaBanHits(active.map(({ row }) => `ban${row.id}`));
+		return attachHitCounters(
+			active.map(({ row }) => serializeBan(row)),
+			"ban",
+			hits,
+		);
 	},
 
 	create: async (access, data) => {
@@ -237,7 +244,7 @@ const internalIpBan = {
 			},
 		});
 
-		return serializeBan(saved);
+		return attachHitCounters(serializeBan(saved), "ban", await readLuaBanHits([`ban${saved.id}`]));
 	},
 
 	delete: async (access, data) => {

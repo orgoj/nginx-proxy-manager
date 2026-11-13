@@ -69,6 +69,15 @@
 			"maxLength": 64,
 			"example": "ui"
 		},
+		"hit_count": {
+			"type": "integer",
+			"minimum": 0,
+			"example": 0
+		},
+		"last_hit_on": {
+			"type": ["string", "null"],
+			"example": null
+		},
 		"meta": {
 			"type": "object",
 			"example": {}

@@ -206,6 +206,9 @@
 	"block-rules.empty": {
 		"defaultMessage": "Üldiseid blokeerimisreegleid pole"
 	},
+	"block-rules.hits": {
+		"defaultMessage": "Tabamused (alates taaskäivitusest)"
+	},
 	"block-rules.note": {
 		"defaultMessage": "Märkus"
 	},

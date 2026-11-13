@@ -17,6 +17,8 @@ export interface BlockRule {
 	note: string;
 	approvedBy: string;
 	source: string;
+	hitCount: number;
+	lastHitOn: string | null;
 }
 
 export interface BlockRulePayload {
@@ -56,6 +58,8 @@ export interface IpBan {
 	action: BlockRuleAction;
 	reason: string;
 	source: string;
+	hitCount: number;
+	lastHitOn: string | null;
 }
 
 export interface IpBanPayload {

@@ -206,6 +206,9 @@
 	"block-rules.empty": {
 		"defaultMessage": "Không có quy tắc chặn toàn cục"
 	},
+	"block-rules.hits": {
+		"defaultMessage": "Lượt chặn (từ khi khởi động lại)"
+	},
 	"block-rules.note": {
 		"defaultMessage": "Ghi chú"
 	},

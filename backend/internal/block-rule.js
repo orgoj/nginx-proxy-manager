@@ -3,6 +3,7 @@ import fs from "node:fs";
 import errs from "../lib/error.js";
 import withNginxLock from "../lib/nginx-lock.js";
 import { isBlockRulesEnabled, renderBlockRulesConfig, validateBlockRuleInput } from "../lib/block-rules.js";
+import { attachHitCounters, readLuaBanHits } from "../lib/bans.js";
 import { nginx as logger } from "../logger.js";
 import blockRuleModel from "../models/block_rule.js";
 import internalAuditLog from "./audit-log.js";
@@ -189,7 +190,8 @@ const internalBlockRule = {
 			.where("is_deleted", 0)
 			.orderBy("id", "desc")
 			.withGraphFetched("[owner]");
-		return rows.map(sanitizeRow);
+		const hits = await readLuaBanHits(rows.map((r) => `r${r.id}`));
+		return attachHitCounters(rows.map(sanitizeRow), "r", hits);
 	},
 
 	get: async (access, { id }) => {
@@ -203,7 +205,8 @@ const internalBlockRule = {
 		if (!row) {
 			throw new errs.ItemNotFoundError(id);
 		}
-		return sanitizeRow(row);
+		const hits = await readLuaBanHits([`r${row.id}`]);
+		return attachHitCounters(sanitizeRow(row), "r", hits);
 	},
 
 	create: async (access, data) => {

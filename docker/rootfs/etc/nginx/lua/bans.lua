@@ -13,6 +13,7 @@ local SECRET_PATH = CONTROL_DIR .. "/ban.secret"
 local BACKUP_FILE = "/data/nginx/global/ip-bans.json"
 local MAX_TTL = 31536000
 local MAX_SYNC_BANS = 5000
+local MAX_HIT_TAGS = 1000
 
 local _M = {}
 local cached_secret = nil
@@ -166,10 +167,71 @@ local function json_resp(status, obj)
 	return ngx.exit(status)
 end
 
-function _M.handle_control()
+local function is_authorized_control()
 	local secret = load_secret()
 	local provided = ngx.req.get_headers()["X-NPM-Ban-Secret"]
-	if not secret or not const_time_eq(provided, secret) then
+	return secret ~= nil and const_time_eq(provided, secret)
+end
+
+function _M.record_hit()
+	if ngx.is_subrequest then
+		return
+	end
+	local dict = ngx.shared.npm_blk_hits
+	if not dict then
+		return
+	end
+	local tag = ngx.var.npm_blk_rule
+	if not tag or tag == "" then
+		return
+	end
+	dict:incr("c:" .. tag, 1, 0)
+	dict:set("t:" .. tag, ngx.time())
+end
+
+function _M.handle_hits()
+	if not is_authorized_control() then
+		return json_resp(401, { error = "unauthorized" })
+	end
+	if ngx.req.get_method() ~= "POST" then
+		return json_resp(405, { error = "method_not_allowed" })
+	end
+	local dict = ngx.shared.npm_blk_hits
+	if not dict then
+		return json_resp(500, { error = "shared_dict_unavailable" })
+	end
+
+	ngx.req.read_body()
+	local body = ngx.req.get_body_data()
+	if not body or #body > 65536 then
+		return json_resp(400, { error = "invalid_body" })
+	end
+	local ok_json, payload = pcall(cjson.decode, body)
+	if not ok_json or type(payload) ~= "table" or type(payload.tags) ~= "table" then
+		return json_resp(400, { error = "invalid_hits_payload" })
+	end
+
+	local count = 0
+	local hits = {}
+	for k, tag in pairs(payload.tags) do
+		count = count + 1
+		if count > MAX_HIT_TAGS then
+			return json_resp(400, { error = "too_many_tags" })
+		end
+		if type(k) ~= "number" or type(tag) ~= "string" or #tag < 1 or #tag > 32 or not string.match(tag, "^[A-Za-z0-9_]+$") then
+			return json_resp(400, { error = "invalid_tag" })
+		end
+		local c = tonumber(dict:get("c:" .. tag))
+		local t = tonumber(dict:get("t:" .. tag))
+		if (c and c > 0) or t then
+			hits[tag] = { count = c or 0, last_hit = t }
+		end
+	end
+	return json_resp(200, { ok = true, hits = hits })
+end
+
+function _M.handle_control()
+	if not is_authorized_control() then
 		return json_resp(401, { error = "unauthorized" })
 	end
 

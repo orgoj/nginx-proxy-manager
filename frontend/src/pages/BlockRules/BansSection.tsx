@@ -136,6 +136,9 @@ export default function BansSection() {
 									<th>
 										<T id="bans.reason" />
 									</th>
+									<th>
+										<T id="block-rules.hits" />
+									</th>
 									<th />
 								</tr>
 							</thead>
@@ -151,6 +154,10 @@ export default function BansSection() {
 											<code>{ban.source}</code>
 										</td>
 										<td>{ban.reason || "-"}</td>
+										<td>
+											<span>{ban.hitCount ?? 0}</span>
+											{ban.lastHitOn ? <div className="text-secondary small">{ban.lastHitOn}</div> : null}
+										</td>
 										<td className="text-end text-nowrap">
 											<Button
 												size="sm"

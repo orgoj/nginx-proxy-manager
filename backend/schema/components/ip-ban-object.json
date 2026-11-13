@@ -49,6 +49,15 @@
 			"maxLength": 64,
 			"example": "fail2ban"
 		},
+		"hit_count": {
+			"type": "integer",
+			"minimum": 0,
+			"example": 0
+		},
+		"last_hit_on": {
+			"type": ["string", "null"],
+			"example": null
+		},
 		"meta": {
 			"type": "object"
 		}

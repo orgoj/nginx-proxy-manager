@@ -206,6 +206,9 @@
 	"block-rules.empty": {
 		"defaultMessage": "No global block rules"
 	},
+	"block-rules.hits": {
+		"defaultMessage": "Hits (since restart)"
+	},
 	"block-rules.note": {
 		"defaultMessage": "Note"
 	},

@@ -9,6 +9,8 @@ export const BAN_ACTIONS = [403, 404, 444];
 export const MAX_BAN_TTL_SECONDS = 365 * 24 * 60 * 60;
 export const DEFAULT_BAN_TTL_SECONDS = 3600;
 export const MAX_ACTIVE_BANS = 5000;
+export const MAX_HIT_QUERY_TAGS = 1000;
+export const MAX_SOCKET_RESPONSE_BYTES = 256 * 1024;
 const CONTROL_CHARS_RE = /\p{Cc}/u;
 
 const CONTROL_DIR = process.env.NPM_BAN_CONTROL_DIR || "/run/nginx-pm-control";
@@ -227,19 +229,33 @@ export const assertSafeSocket = (controlDir = CONTROL_DIR) => {
 /**
  * Sends a bounded JSON request to the OpenResty Lua unix control socket.
  */
-export const sendLuaBanControl = (method, reqPath, payload = null, controlDir = CONTROL_DIR) =>
+export const sendLuaBanControl = (
+	method,
+	reqPath,
+	payload = null,
+	controlDir = CONTROL_DIR,
+	{ maxResponseBytes = MAX_SOCKET_RESPONSE_BYTES } = {},
+) =>
 	new Promise((resolve, reject) => {
+		let settled = false;
+		const finish = (err, value) => {
+			if (settled) return;
+			settled = true;
+			if (err) reject(err);
+			else resolve(value);
+		};
+
 		let secret;
 		let sockPath;
 		try {
 			secret = readBanSecret(controlDir);
 			sockPath = assertSafeSocket(controlDir);
 		} catch (err) {
-			reject(err);
+			finish(err);
 			return;
 		}
 		if (!secret || !sockPath) {
-			resolve({ available: false });
+			finish(null, { available: false });
 			return;
 		}
 
@@ -264,29 +280,45 @@ export const sendLuaBanControl = (method, reqPath, payload = null, controlDir = 
 			},
 			(res) => {
 				const chunks = [];
-				res.on("data", (chunk) => chunks.push(chunk));
+				let totalBytes = 0;
+				let overflowed = false;
+				res.on("data", (chunk) => {
+					totalBytes += chunk.length;
+					if (totalBytes > maxResponseBytes) {
+						overflowed = true;
+						finish(new Error(`Ban socket response exceeded ${maxResponseBytes} bytes`));
+						req.destroy();
+						res.destroy();
+						return;
+					}
+					chunks.push(chunk);
+				});
+				res.on("error", (err) => finish(err));
 				res.on("end", () => {
+					if (overflowed || settled) return;
 					const text = Buffer.concat(chunks).toString("utf8");
 					let parsed = null;
 					try {
 						parsed = text ? JSON.parse(text) : {};
 					} catch {
-						reject(new Error(`Invalid JSON from ban socket (HTTP ${res.statusCode})`));
+						finish(new Error(`Invalid JSON from ban socket (HTTP ${res.statusCode})`));
 						return;
 					}
 					if (res.statusCode >= 200 && res.statusCode < 300) {
-						resolve({ available: true, ...parsed });
+						finish(null, { available: true, ...parsed });
 					} else {
-						reject(new Error(parsed?.error || `Ban socket HTTP ${res.statusCode}`));
+						finish(new Error(parsed?.error || `Ban socket HTTP ${res.statusCode}`));
 					}
 				});
 			},
 		);
 
 		req.on("timeout", () => {
-			req.destroy(new Error("Ban socket request timeout"));
+			const err = new Error("Ban socket request timeout");
+			finish(err);
+			req.destroy();
 		});
-		req.on("error", reject);
+		req.on("error", (err) => finish(err));
 
 		if (body !== null) {
 			req.write(body);
@@ -297,6 +329,61 @@ export const sendLuaBanControl = (method, reqPath, payload = null, controlDir = 
 /**
  * Writes active unexpired bans atomically for fast nginx worker startup/restart rehydration.
  */
+/**
+ * Read per-rule and per-ban hit counters from OpenResty lua_shared_dict npm_blk_hits.
+ * Degrades cleanly to {} if the nginx control socket is unavailable (e.g. startup or unit tests).
+ */
+export const readLuaBanHits = async (tags = [], controlDir = CONTROL_DIR) => {
+	const uniqueTags = [];
+	const seen = new Set();
+	if (Array.isArray(tags)) {
+		for (const tag of tags) {
+			if (typeof tag === "string" && /^[A-Za-z0-9_]{1,32}$/.test(tag) && !seen.has(tag)) {
+				seen.add(tag);
+				uniqueTags.push(tag);
+			}
+		}
+	}
+	if (uniqueTags.length === 0) {
+		return {};
+	}
+	try {
+		const out = {};
+		for (let i = 0; i < uniqueTags.length; i += MAX_HIT_QUERY_TAGS) {
+			const batch = uniqueTags.slice(i, i + MAX_HIT_QUERY_TAGS);
+			const res = await sendLuaBanControl("POST", "/internal/hits", { tags: batch }, controlDir);
+			const rawHits = res?.hits && typeof res.hits === "object" ? res.hits : {};
+			for (const tag of batch) {
+				const entry = rawHits[tag];
+				if (!entry || typeof entry !== "object") continue;
+				const count = Number.isInteger(entry.count) && entry.count >= 0 ? entry.count : 0;
+				const lastHitSec = Number(entry.last_hit);
+				const lastHitOn =
+					Number.isFinite(lastHitSec) && lastHitSec > 0
+						? new Date(lastHitSec * 1000).toISOString()
+						: null;
+				out[tag] = { hit_count: count, last_hit_on: lastHitOn };
+			}
+		}
+		return out;
+	} catch {
+		return {};
+	}
+};
+
+export const attachHitCounters = (rowsOrRow, prefix, hitsMap = {}) => {
+	const decorate = (row) => {
+		if (!row) return row;
+		const hit = hitsMap[`${prefix}${row.id}`];
+		return {
+			...row,
+			hit_count: Number.isInteger(hit?.hit_count) ? hit.hit_count : 0,
+			last_hit_on: hit?.last_hit_on || null,
+		};
+	};
+	return Array.isArray(rowsOrRow) ? rowsOrRow.map(decorate) : decorate(rowsOrRow);
+};
+
 export const writeBanBackupFile = (bans, filePath = BAN_BACKUP_FILE) => {
 	const dir = path.dirname(filePath);
 	fs.mkdirSync(dir, { recursive: true });
