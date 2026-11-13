@@ -149,6 +149,36 @@
 	"auto": {
 		"defaultMessage": "Auto"
 	},
+	"block-rules": {
+		"defaultMessage": "Global Block Rules"
+	},
+	"block-rules.action": {
+		"defaultMessage": "Action"
+	},
+	"block-rules.approved-by": {
+		"defaultMessage": "Approved By"
+	},
+	"block-rules.delete-confirm": {
+		"defaultMessage": "Delete rule {pattern}?"
+	},
+	"block-rules.empty": {
+		"defaultMessage": "No global block rules"
+	},
+	"block-rules.note": {
+		"defaultMessage": "Note"
+	},
+	"block-rules.pattern": {
+		"defaultMessage": "Pattern"
+	},
+	"block-rules.referer-pattern": {
+		"defaultMessage": "Referer Pattern"
+	},
+	"block-rules.saved": {
+		"defaultMessage": "Saved and applied"
+	},
+	"block-rules.type": {
+		"defaultMessage": "Type"
+	},
 	"cancel": {
 		"defaultMessage": "Cancel"
 	},

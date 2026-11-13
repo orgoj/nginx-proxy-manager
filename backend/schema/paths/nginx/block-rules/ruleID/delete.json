@@ -1,0 +1,35 @@
+{
+	"operationId": "deleteBlockRule",
+	"summary": "Delete a global block rule",
+	"tags": ["block-rules"],
+	"security": [
+		{
+			"bearerAuth": ["block_rules.manage"]
+		}
+	],
+	"parameters": [
+		{
+			"in": "path",
+			"name": "ruleID",
+			"description": "Block Rule ID",
+			"schema": {
+				"type": "integer",
+				"minimum": 1
+			},
+			"required": true,
+			"example": 1
+		}
+	],
+	"responses": {
+		"200": {
+			"description": "200 response",
+			"content": {
+				"application/json": {
+					"schema": {
+						"type": "boolean"
+					}
+				}
+			}
+		}
+	}
+}

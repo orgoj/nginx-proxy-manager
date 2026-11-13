@@ -1,0 +1,74 @@
+{
+	"operationId": "updateBlockRule",
+	"summary": "Update a global block rule",
+	"tags": ["block-rules"],
+	"security": [
+		{
+			"bearerAuth": ["block_rules.manage"]
+		}
+	],
+	"parameters": [
+		{
+			"in": "path",
+			"name": "ruleID",
+			"description": "Block Rule ID",
+			"schema": {
+				"type": "integer",
+				"minimum": 1
+			},
+			"required": true,
+			"example": 1
+		}
+	],
+	"requestBody": {
+		"description": "Block Rule Payload",
+		"required": true,
+		"content": {
+			"application/json": {
+				"schema": {
+					"type": "object",
+					"additionalProperties": false,
+					"minProperties": 1,
+					"properties": {
+						"type": {
+							"$ref": "../../../../components/block-rule-object.json#/properties/type"
+						},
+						"pattern": {
+							"$ref": "../../../../components/block-rule-object.json#/properties/pattern"
+						},
+						"referer_pattern": {
+							"$ref": "../../../../components/block-rule-object.json#/properties/referer_pattern"
+						},
+						"action": {
+							"$ref": "../../../../components/block-rule-object.json#/properties/action"
+						},
+						"enabled": {
+							"$ref": "../../../../components/block-rule-object.json#/properties/enabled"
+						},
+						"note": {
+							"$ref": "../../../../components/block-rule-object.json#/properties/note"
+						},
+						"approved_by": {
+							"$ref": "../../../../components/block-rule-object.json#/properties/approved_by"
+						},
+						"meta": {
+							"$ref": "../../../../components/block-rule-object.json#/properties/meta"
+						}
+					}
+				}
+			}
+		}
+	},
+	"responses": {
+		"200": {
+			"description": "200 response",
+			"content": {
+				"application/json": {
+					"schema": {
+						"$ref": "../../../../components/block-rule-object.json"
+					}
+				}
+			}
+		}
+	}
+}

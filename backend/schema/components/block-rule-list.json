@@ -1,0 +1,6 @@
+{
+	"type": "array",
+	"items": {
+		"$ref": "./block-rule-object.json"
+	}
+}

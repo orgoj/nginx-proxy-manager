@@ -149,6 +149,36 @@
 	"auto": {
 		"defaultMessage": "Automaatne"
 	},
+	"block-rules": {
+		"defaultMessage": "Üldised blokeerimisreeglid"
+	},
+	"block-rules.action": {
+		"defaultMessage": "Tegevus"
+	},
+	"block-rules.approved-by": {
+		"defaultMessage": "Kinnitanud"
+	},
+	"block-rules.delete-confirm": {
+		"defaultMessage": "Kustutada reegel {pattern}?"
+	},
+	"block-rules.empty": {
+		"defaultMessage": "Üldiseid blokeerimisreegleid pole"
+	},
+	"block-rules.note": {
+		"defaultMessage": "Märkus"
+	},
+	"block-rules.pattern": {
+		"defaultMessage": "Muster"
+	},
+	"block-rules.referer-pattern": {
+		"defaultMessage": "Refereri muster"
+	},
+	"block-rules.saved": {
+		"defaultMessage": "Salvestatud ja rakendatud"
+	},
+	"block-rules.type": {
+		"defaultMessage": "Tüüp"
+	},
 	"cancel": {
 		"defaultMessage": "Tühista"
 	},

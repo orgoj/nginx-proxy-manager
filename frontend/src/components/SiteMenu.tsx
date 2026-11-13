@@ -104,6 +104,12 @@ const menuItems: MenuItem[] = [
 		permissionSection: ADMIN,
 	},
 	{
+		to: "/block-rules",
+		icon: IconShield,
+		label: "block-rules",
+		permissionSection: ADMIN,
+	},
+	{
 		to: "/custom-files",
 		icon: IconFileCode,
 		label: "custom-files",

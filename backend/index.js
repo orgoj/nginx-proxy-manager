@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import app from "./app.js";
+import internalBlockRule from "./internal/block-rule.js";
 import internalCertificate from "./internal/certificate.js";
 import internalIpRanges from "./internal/ip_ranges.js";
 import { global as logger } from "./logger.js";
@@ -14,6 +15,11 @@ async function appStart() {
 	return migrateUp()
 		.then(setup)
 		.then(getCompiledSchema)
+		.then(() =>
+			internalBlockRule.syncOnStartup().catch((err) => {
+				logger.error("Global block rules startup sync failed, continuing anyway:", err.message);
+			}),
+		)
 		.then(() => {
 			if (!IP_RANGES_FETCH_ENABLED) {
 				logger.info("IP Ranges fetch is disabled by environment variable");

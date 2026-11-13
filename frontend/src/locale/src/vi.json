@@ -149,6 +149,36 @@
 	"auto": {
 		"defaultMessage": "Tự động"
 	},
+	"block-rules": {
+		"defaultMessage": "Quy tắc chặn toàn cục"
+	},
+	"block-rules.action": {
+		"defaultMessage": "Hành động"
+	},
+	"block-rules.approved-by": {
+		"defaultMessage": "Người duyệt"
+	},
+	"block-rules.delete-confirm": {
+		"defaultMessage": "Xóa quy tắc {pattern}?"
+	},
+	"block-rules.empty": {
+		"defaultMessage": "Không có quy tắc chặn toàn cục"
+	},
+	"block-rules.note": {
+		"defaultMessage": "Ghi chú"
+	},
+	"block-rules.pattern": {
+		"defaultMessage": "Mẫu"
+	},
+	"block-rules.referer-pattern": {
+		"defaultMessage": "Mẫu Referer"
+	},
+	"block-rules.saved": {
+		"defaultMessage": "Đã lưu và áp dụng"
+	},
+	"block-rules.type": {
+		"defaultMessage": "Loại"
+	},
 	"cancel": {
 		"defaultMessage": "Hủy"
 	},

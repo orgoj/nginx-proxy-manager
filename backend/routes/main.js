@@ -9,6 +9,7 @@ import ciRoutes from "./ci.js";
 import customFilesRoutes from "./custom-files.js";
 import logsRoutes from "./logs.js";
 import accessListsRoutes from "./nginx/access_lists.js";
+import blockRulesRoutes from "./nginx/block_rules.js";
 import certificatesHostsRoutes from "./nginx/certificates.js";
 import deadHostsRoutes from "./nginx/dead_hosts.js";
 import proxyHostsRoutes from "./nginx/proxy_hosts.js";
@@ -62,6 +63,7 @@ router.use("/nginx/redirection-hosts", redirectionHostsRoutes);
 router.use("/nginx/dead-hosts", deadHostsRoutes);
 router.use("/nginx/streams", streamsRoutes);
 router.use("/nginx/access-lists", accessListsRoutes);
+router.use("/nginx/block-rules", blockRulesRoutes);
 router.use("/nginx/certificates", certificatesHostsRoutes);
 
 // Only include CI routes if we're in a CI environment

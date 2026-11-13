@@ -17,6 +17,7 @@ fi
 # Create required folders
 mkdir -p \
 	/data/nginx \
+	/data/nginx/global \
 	/data/custom_ssl \
 	/data/logs \
 	/data/access \
@@ -44,3 +45,21 @@ chmod 644 /etc/logrotate.d/nginx-proxy-manager
 # nginx has not been started yet, so any pid file here is stale. Remove it,
 # otherwise a pid file owned by another user stops nginx starting as PUID:PGID
 rm -f /run/nginx/nginx.pid
+
+if [ ! -f /data/nginx/global/block-rules.conf ]; then
+	cat >/data/nginx/global/block-rules.conf <<'EOF'
+# Managed by Nginx Proxy Manager (block_rule). Do not edit by hand.
+map $uri $npm_blk_acme {
+	default 0;
+	"~^/\.well-known/acme-challenge/" 1;
+}
+map $uri $npm_blk_internal {
+	volatile;
+	default 0;
+	"~^/__npm_error/" 1;
+}
+map "" $npm_blk { default ""; }
+map "" $npm_blk_static_rule { default ""; }
+EOF
+	chmod 644 /data/nginx/global/block-rules.conf
+fi

@@ -1,0 +1,77 @@
+{
+	"type": "object",
+	"description": "Global Block Rule object",
+	"required": [
+		"id",
+		"created_on",
+		"modified_on",
+		"owner_user_id",
+		"type",
+		"pattern",
+		"referer_pattern",
+		"action",
+		"enabled",
+		"note",
+		"approved_by",
+		"source",
+		"meta"
+	],
+	"properties": {
+		"id": {
+			"$ref": "../common.json#/properties/id"
+		},
+		"created_on": {
+			"$ref": "../common.json#/properties/created_on"
+		},
+		"modified_on": {
+			"$ref": "../common.json#/properties/modified_on"
+		},
+		"owner_user_id": {
+			"$ref": "../common.json#/properties/user_id"
+		},
+		"type": {
+			"type": "string",
+			"enum": ["ip", "ua", "uri", "uri_referer"],
+			"example": "ua"
+		},
+		"pattern": {
+			"type": "string",
+			"minLength": 1,
+			"maxLength": 512,
+			"example": "(semrush|mj12bot)"
+		},
+		"referer_pattern": {
+			"type": "string",
+			"maxLength": 512,
+			"example": ""
+		},
+		"action": {
+			"type": "integer",
+			"enum": [403, 404, 444],
+			"example": 403
+		},
+		"enabled": {
+			"type": "boolean",
+			"example": true
+		},
+		"note": {
+			"type": "string",
+			"maxLength": 500,
+			"example": "Block crawler"
+		},
+		"approved_by": {
+			"type": "string",
+			"maxLength": 255,
+			"example": "michael"
+		},
+		"source": {
+			"type": "string",
+			"maxLength": 64,
+			"example": "ui"
+		},
+		"meta": {
+			"type": "object",
+			"example": {}
+		}
+	}
+}

@@ -33,6 +33,10 @@
 			"description": "Endpoints related to Access Lists"
 		},
 		{
+			"name": "block-rules",
+			"description": "Endpoints related to Global Block Rules"
+		},
+		{
 			"name": "certificates",
 			"description": "Endpoints related to Certificates"
 		},
@@ -112,6 +116,25 @@
 			},
 			"delete": {
 				"$ref": "./paths/nginx/access-lists/listID/delete.json"
+			}
+		},
+		"/nginx/block-rules": {
+			"get": {
+				"$ref": "./paths/nginx/block-rules/get.json"
+			},
+			"post": {
+				"$ref": "./paths/nginx/block-rules/post.json"
+			}
+		},
+		"/nginx/block-rules/{ruleID}": {
+			"get": {
+				"$ref": "./paths/nginx/block-rules/ruleID/get.json"
+			},
+			"put": {
+				"$ref": "./paths/nginx/block-rules/ruleID/put.json"
+			},
+			"delete": {
+				"$ref": "./paths/nginx/block-rules/ruleID/delete.json"
 			}
 		},
 		"/nginx/certificates": {

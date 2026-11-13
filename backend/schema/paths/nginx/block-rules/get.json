@@ -1,0 +1,22 @@
+{
+	"operationId": "getBlockRules",
+	"summary": "Get all global block rules",
+	"tags": ["block-rules"],
+	"security": [
+		{
+			"bearerAuth": ["block_rules.manage"]
+		}
+	],
+	"responses": {
+		"200": {
+			"description": "200 response",
+			"content": {
+				"application/json": {
+					"schema": {
+						"$ref": "../../../components/block-rule-list.json"
+					}
+				}
+			}
+		}
+	}
+}
